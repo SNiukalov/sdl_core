@@ -28,7 +28,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-set(LOG4CXX_SOURCE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../logging-log4cxx_qnx)
+set(LOG4CXX_SOURCE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../apache-log4cxx-0.10.0)
 
 set(CONFIGURE_FLAGS
     "--host=${CMAKE_SYSTEM_PROCESSOR}-nto-qnx"
@@ -59,31 +59,9 @@ set(CONFIGURE_FLAGS
     "CC=${QNX_HOST}/usr/bin/nto${CMAKE_SYSTEM_PROCESSOR}-gcc${HOST_EXECUTABLE_SUFFIX}"
     )
 
-# set(SIMPLEDATEFORMAT_PATH
-#   "${LOG4CXX_SOURCE_DIRECTORY}/src/main/include/log4cxx/helpers/simpledateformat.h")
-
-# set(STRINGHELPER_PATH
-#   "${LOG4CXX_SOURCE_DIRECTORY}/src/main/cpp/stringhelper.cpp")
-
-# set(SIMPLEDATEFORMAT_PATCH 
-#    sed -Ei "s/namespace std '\{' class locale'\;' '\}'/#include \<locale\>\\nusing std::locale'\;'/g" ${SIMPLEDATEFORMAT_PATH}
-# )
-
-# set(STRINGHELPER_PATCH 
-#    sed -Ei "s/#include \<apr.h\>/#include \<apr.h\>\\n#include \<stdlib.h\>/g" ${STRINGHELPER_PATH}
-# )
-
-
 add_custom_command(OUTPUT ${LOG4CXX_BUILD_DIRECTORY}/Makefile  
-  # COMMAND ${SIMPLEDATEFORMAT_PATCH} 
-  # COMMAND ${STRINGHELPER_PATCH} 
   COMMAND ${LOG4CXX_SOURCE_DIRECTORY}/configure ${CONFIGURE_FLAGS}  
   DEPENDS libapr-1
   DEPENDS apr-util
-  WORKING_DIRECTORY ${LOG4CXX_BUILD_DIRECTORY}
-)
-
-add_custom_target(liblog4cxx ALL make
-  DEPENDS ${LOG4CXX_BUILD_DIRECTORY}/Makefile
   WORKING_DIRECTORY ${LOG4CXX_BUILD_DIRECTORY}
 )
