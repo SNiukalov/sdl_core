@@ -36,7 +36,7 @@ set(CONFIGURE_FLAGS
     "--with-apr=../apr-build"
     "--with-apr-util=../apr-util-build"
     "--disable-dot"
-	  "--disable-doxygen"
+	"--disable-doxygen"
     "--disable-html-docs"
     "ac_cv_file__dev_zero=yes"
     "ac_cv_func_setpgrp_void=yes"
@@ -58,10 +58,4 @@ set(CONFIGURE_FLAGS
     "CXX=${QNX_HOST}/usr/bin/nto${CMAKE_SYSTEM_PROCESSOR}-g++${HOST_EXECUTABLE_SUFFIX}"
     "CC=${QNX_HOST}/usr/bin/nto${CMAKE_SYSTEM_PROCESSOR}-gcc${HOST_EXECUTABLE_SUFFIX}"
     )
-
-add_custom_command(OUTPUT ${LOG4CXX_BUILD_DIRECTORY}/Makefile  
-  COMMAND ${LOG4CXX_SOURCE_DIRECTORY}/configure ${CONFIGURE_FLAGS}  
-  DEPENDS libapr-1
-  DEPENDS apr-util
-  WORKING_DIRECTORY ${LOG4CXX_BUILD_DIRECTORY}
-)
+    
