@@ -47,6 +47,7 @@ class StateController {
    * @param app appication to setup regular State
    * @param window_id id of applicaion's window to apply HMI state
    * @param state state of new regular state
+   * @param SendActivateApp: if true, ActivateAppRequest will be sent to HMI
    */
   virtual void SetRegularState(ApplicationSharedPtr app,
                                const WindowID window_id,
@@ -60,7 +61,7 @@ class StateController {
    * @param hmi_level of new regular state
    * @param audio_state of new regular state
    * @paran video_state of new regular state
-   * @param SendActivateApp: if true, ActivateAppRequest will be sent on HMI
+   * @param SendActivateApp: if true, ActivateAppRequest will be sent to HMI
    */
   virtual void SetRegularState(
       ApplicationSharedPtr app,
@@ -158,6 +159,28 @@ class StateController {
       ApplicationSharedPtr app,
       const mobile_apis::HMILevel::eType default_level) = 0;
 
+  /**
+   * @brief OnAppWidgetAdded Sets default state for widget and apply currently
+   * active HMI states
+   * @param app application to apply states
+   * @param window_id id of window to add
+   * @param default_level default HMI level
+   */
+  virtual void OnAppWindowAdded(
+      ApplicationSharedPtr app,
+      const WindowID window_id,
+      const mobile_apis::WindowType::eType window_type,
+      const mobile_apis::HMILevel::eType default_level) = 0;
+
+  /**
+   * @brief SendBCActivateApp sends BC.ActivateApp request to HMI to activate
+   * specified HMI level for a specified application
+   * @param app application to activate
+   * @param level HMI level to set
+   * @param send_policy_priority policy priority of ActivateApp request
+   * @return correlation id of sent ActivateApp request in case of success,
+   * otherwise returns -1
+   */
   virtual int64_t SendBCActivateApp(ApplicationConstSharedPtr app,
                                     hmi_apis::Common_HMILevel::eType level,
                                     bool send_policy_priority) = 0;

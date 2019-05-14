@@ -552,9 +552,7 @@ class Application : public virtual InitialApplicationData,
    * @return HMI level of application's window
    */
   virtual const mobile_api::HMILevel::eType hmi_level(
-      const WindowID window_id = mobile_apis::PredefinedWindows::
-          DEFAULT_WINDOW /*TODO(AKalinich): Decide if we need default value*/)
-      const = 0;
+      const WindowID window_id) const = 0;
 
   virtual const uint32_t put_file_in_none_count() const = 0;
   virtual const uint32_t delete_file_in_none_count() const = 0;
@@ -566,9 +564,7 @@ class Application : public virtual InitialApplicationData,
    * @return system context of application's window
    */
   virtual const mobile_api::SystemContext::eType system_context(
-      const WindowID window_id = mobile_apis::PredefinedWindows::
-          DEFAULT_WINDOW /*TODO(AKalinich): Decide if we need default value*/)
-      const = 0;
+      const WindowID window_id) const = 0;
   virtual const mobile_api::AudioStreamingState::eType audio_streaming_state()
       const = 0;
   virtual const mobile_api::VideoStreamingState::eType video_streaming_state()
@@ -772,7 +768,7 @@ class Application : public virtual InitialApplicationData,
   /**
    * @brief Getter for a list of available application windows including the
    * main
-   * @return list of available window ids
+   * @return list of available window IDs created by application
    */
   virtual WindowIds GetWindowIds() const = 0;
 

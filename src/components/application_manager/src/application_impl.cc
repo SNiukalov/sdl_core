@@ -187,7 +187,8 @@ void ApplicationImpl::CloseActiveMessage() {
 }
 
 bool ApplicationImpl::IsFullscreen() const {
-  return mobile_api::HMILevel::HMI_FULL == hmi_level();
+  return mobile_api::HMILevel::HMI_FULL ==
+         hmi_level(mobile_apis::PredefinedWindows::DEFAULT_WINDOW);
 }
 
 bool ApplicationImpl::is_audio() const {
@@ -321,7 +322,7 @@ const HmiStatePtr ApplicationImpl::RegularHmiState(
 }
 
 WindowIds ApplicationImpl::GetWindowIds() const {
-  LOG4CXX_DEBUG(logger_, "Colleacting window ids for application " << app_id());
+  LOG4CXX_DEBUG(logger_, "Collecting window IDs for application " << app_id());
   return state_.GetWindowIds();
 }
 
@@ -1131,11 +1132,9 @@ void ApplicationImpl::set_audio_streaming_state(
   // According to proposal SDL-0216 audio and video streaming states should
   // be applied for all windows to keep consistency
   HmiStates hmi_states = state_.GetStates(HmiState::STATE_ID_CURRENT);
-  std::for_each(hmi_states.begin(),
-                hmi_states.end(),
-                [&state](const HmiStatePtr hmi_state) {
-                  hmi_state->set_audio_streaming_state(state);
-                });
+  for (const auto& hmi_state : hmi_states) {
+    hmi_state->set_audio_streaming_state(state);
+  }
 }
 
 void ApplicationImpl::set_hmi_level(
@@ -1151,7 +1150,8 @@ void ApplicationImpl::set_hmi_level(
   }
   ApplicationSharedPtr app = application_manager_.application(app_id());
   DCHECK_OR_RETURN_VOID(app)
-  application_manager_.state_controller().SetRegularState(app, new_hmi_level);
+  application_manager_.state_controller().SetRegularState(
+      app, window_id, new_hmi_level);
   LOG4CXX_INFO(logger_, "hmi_level = " << new_hmi_level);
   usage_report_.RecordHmiStateChanged(new_hmi_level);
 }

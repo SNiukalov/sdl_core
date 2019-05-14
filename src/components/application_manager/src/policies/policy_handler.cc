@@ -126,7 +126,11 @@ struct HMILevelPredicate
       : level_(level) {}
 
   bool operator()(const ApplicationSharedPtr app) const {
-    return level_ == app->hmi_level() ? true : false;
+    return level_ ==
+                   app->hmi_level(
+                       mobile_apis::PredefinedWindows::DEFAULT_WINDOW)
+               ? true
+               : false;
   }
 
  private:
@@ -165,6 +169,7 @@ struct DeactivateApplication {
     if (device_id_ == app->device()) {
       state_ctrl_.SetRegularState(
           app,
+          mobile_apis::PredefinedWindows::DEFAULT_WINDOW,
           mobile_apis::HMILevel::HMI_NONE,
           mobile_apis::AudioStreamingState::NOT_AUDIBLE,
           mobile_apis::VideoStreamingState::NOT_STREAMABLE,
@@ -202,7 +207,11 @@ struct SDLAllowedNotification {
       } else {
         return;
       }
-      state_controller_.SetRegularState(app, default_mobile_hmi, true);
+      state_controller_.SetRegularState(
+          app,
+          mobile_apis::PredefinedWindows::DEFAULT_WINDOW,
+          default_mobile_hmi,
+          true);
     }
   }
 
@@ -975,6 +984,7 @@ void PolicyHandler::OnPendingPermissionChange(
         app_id, permissions, application_manager_);
     application_manager_.state_controller().SetRegularState(
         app,
+        mobile_apis::PredefinedWindows::DEFAULT_WINDOW,
         mobile_apis::HMILevel::HMI_NONE,
         mobile_apis::AudioStreamingState::NOT_AUDIBLE,
         mobile_apis::VideoStreamingState::NOT_STREAMABLE,
@@ -983,7 +993,8 @@ void PolicyHandler::OnPendingPermissionChange(
     return;
   }
 
-  mobile_apis::HMILevel::eType app_hmi_level = app->hmi_level();
+  mobile_apis::HMILevel::eType app_hmi_level =
+      app->hmi_level(mobile_apis::PredefinedWindows::DEFAULT_WINDOW);
 
   switch (app_hmi_level) {
     case mobile_apis::HMILevel::eType::HMI_FULL:
@@ -1137,7 +1148,11 @@ struct SDLAlowedNotification {
       } else {
         return;
       }
-      state_controller_.SetRegularState(app, default_mobile_hmi, true);
+      state_controller_.SetRegularState(
+          app,
+          mobile_apis::PredefinedWindows::DEFAULT_WINDOW,
+          default_mobile_hmi,
+          true);
     }
   }
 
@@ -1246,7 +1261,12 @@ void PolicyHandler::OnAllowSDLFunctionalityNotification(
                                     : VideoStreamingState::NOT_STREAMABLE;
 
       application_manager_.state_controller().SetRegularState(
-          app, mobile_apis::HMILevel::HMI_FULL, audio_state, video_state, true);
+          app,
+          mobile_apis::PredefinedWindows::DEFAULT_WINDOW,
+          mobile_apis::HMILevel::HMI_FULL,
+          audio_state,
+          video_state,
+          true);
       last_activated_app_id_ = 0;
     } else {
       DeactivateApplication deactivate_notification(
@@ -1370,14 +1390,15 @@ void PolicyHandler::OnPermissionsUpdated(const std::string& policy_app_id,
 
   // The application currently not running (i.e. in NONE) should change HMI
   // level to default
-  mobile_apis::HMILevel::eType current_hmi_level = app->hmi_level();
+  mobile_apis::HMILevel::eType current_hmi_level =
+      app->hmi_level(mobile_apis::PredefinedWindows::DEFAULT_WINDOW);
   mobile_apis::HMILevel::eType hmi_level =
       MessageHelper::StringToHMILevel(default_hmi);
 
   if (mobile_apis::HMILevel::INVALID_ENUM == hmi_level) {
-    LOG4CXX_WARN(
-        logger_,
-        "Couldn't convert default hmi level " << default_hmi << " to enum.");
+    LOG4CXX_WARN(logger_,
+                 "Couldn't convert default hmi level " << default_hmi
+                                                       << " to enum.");
     return;
   }
   if (current_hmi_level == hmi_level) {
@@ -1393,10 +1414,16 @@ void PolicyHandler::OnPermissionsUpdated(const std::string& policy_app_id,
 
       if (hmi_level == mobile_apis::HMILevel::HMI_FULL) {
         application_manager_.state_controller().SetRegularState(
-            app, hmi_level, true);
+            app,
+            mobile_apis::PredefinedWindows::DEFAULT_WINDOW,
+            hmi_level,
+            true);
       } else {
         application_manager_.state_controller().SetRegularState(
-            app, hmi_level, false);
+            app,
+            mobile_apis::PredefinedWindows::DEFAULT_WINDOW,
+            hmi_level,
+            false);
       }
       break;
     }
@@ -1512,8 +1539,8 @@ void PolicyHandler::CheckPermissions(
     const RPCParams& rpc_params,
     CheckPermissionResult& result) {
   POLICY_LIB_CHECK_VOID();
-  const std::string hmi_level =
-      MessageHelper::StringifiedHMILevel(app->hmi_level());
+  const std::string hmi_level = MessageHelper::StringifiedHMILevel(
+      app->hmi_level(mobile_apis::PredefinedWindows::DEFAULT_WINDOW));
   if (hmi_level.empty()) {
     LOG4CXX_WARN(logger_,
                  "HMI level for " << app->policy_app_id() << " is invalid, rpc "
@@ -2254,7 +2281,8 @@ void PolicyHandler::UpdateHMILevel(ApplicationSharedPtr app,
                                    mobile_apis::HMILevel::eType level) {
   LOG4CXX_AUTO_TRACE(logger_);
   DCHECK_OR_RETURN_VOID(app);
-  if (app->hmi_level() == mobile_apis::HMILevel::HMI_NONE) {
+  if (app->hmi_level(mobile_apis::PredefinedWindows::DEFAULT_WINDOW) ==
+      mobile_apis::HMILevel::HMI_NONE) {
     // If default is FULL, send request to HMI. Notification to mobile will be
     // sent on response receiving.
     if (mobile_apis::HMILevel::HMI_FULL == level) {
@@ -2266,7 +2294,10 @@ void PolicyHandler::UpdateHMILevel(ApplicationSharedPtr app,
       // Set application hmi level
       application_manager_.ChangeAppsHMILevel(app->app_id(), level);
       // If hmi Level is full, it will be seted after ActivateApp response
-      MessageHelper::SendHMIStatusNotification(*app, application_manager_);
+      MessageHelper::SendHMIStatusNotification(
+          app,
+          mobile_apis::PredefinedWindows::DEFAULT_WINDOW,
+          application_manager_);
     }
   }
 }
@@ -2309,7 +2340,10 @@ void PolicyHandler::OnUpdateHMIStatus(const std::string& device_id,
                    << app->app_id() << " to default hmi level " << level);
   // Set application hmi level
   application_manager_.ChangeAppsHMILevel(app->app_id(), level);
-  MessageHelper::SendHMIStatusNotification(*app, application_manager_);
+  MessageHelper::SendHMIStatusNotification(
+      app,
+      mobile_apis::PredefinedWindows::DEFAULT_WINDOW,
+      application_manager_);
 }
 
 bool PolicyHandler::GetModuleTypes(const std::string& policy_app_id,

@@ -172,6 +172,7 @@ ApplicationManagerImpl::ApplicationManagerImpl(
     , state_ctrl_(*this)
     , pending_device_map_lock_ptr_(
           std::make_shared<sync_primitives::RecursiveLock>())
+    , app_widgets_services_map_()
     , application_list_update_timer_(
           "AM ListUpdater",
           new TimerTaskImpl<ApplicationManagerImpl>(
@@ -295,7 +296,10 @@ ApplicationSharedPtr ApplicationManagerImpl::active_application() const {
 }
 
 bool LimitedAppPredicate(const ApplicationSharedPtr app) {
-  return app ? app->hmi_level() == mobile_api::HMILevel::HMI_LIMITED : false;
+  return app
+             ? app->hmi_level(mobile_api::PredefinedWindows::DEFAULT_WINDOW) ==
+                   mobile_api::HMILevel::HMI_LIMITED
+             : false;
 }
 
 ApplicationSharedPtr ApplicationManagerImpl::get_limited_media_application()
@@ -306,7 +310,8 @@ ApplicationSharedPtr ApplicationManagerImpl::get_limited_media_application()
 
 bool LimitedNaviAppPredicate(const ApplicationSharedPtr app) {
   return app ? (app->is_navi() &&
-                app->hmi_level() == mobile_api::HMILevel::HMI_LIMITED)
+                app->hmi_level(mobile_api::PredefinedWindows::DEFAULT_WINDOW) ==
+                    mobile_api::HMILevel::HMI_LIMITED)
              : false;
 }
 
@@ -318,7 +323,8 @@ ApplicationSharedPtr ApplicationManagerImpl::get_limited_navi_application()
 
 bool LimitedVoiceAppPredicate(const ApplicationSharedPtr app) {
   return app ? (app->is_voice_communication_supported() &&
-                app->hmi_level() == mobile_api::HMILevel::HMI_LIMITED)
+                app->hmi_level(mobile_api::PredefinedWindows::DEFAULT_WINDOW) ==
+                    mobile_api::HMILevel::HMI_LIMITED)
              : false;
 }
 
@@ -340,7 +346,8 @@ ApplicationManagerImpl::applications_with_navi() {
 
 bool LimitedMobileProjectionPredicate(const ApplicationSharedPtr app) {
   return app ? (app->mobile_projection_enabled() &&
-                app->hmi_level() == mobile_api::HMILevel::HMI_LIMITED)
+                app->hmi_level(mobile_api::PredefinedWindows::DEFAULT_WINDOW) ==
+                    mobile_api::HMILevel::HMI_LIMITED)
              : false;
 }
 
@@ -739,7 +746,12 @@ bool ApplicationManagerImpl::ActivateApplication(ApplicationSharedPtr app) {
   const VideoStreamingState::eType video_state =
       app->IsVideoApplication() ? VideoStreamingState::STREAMABLE
                                 : VideoStreamingState::NOT_STREAMABLE;
-  state_ctrl_.SetRegularState(app, hmi_level, audio_state, video_state, false);
+  state_ctrl_.SetRegularState(app,
+                              mobile_apis::PredefinedWindows::DEFAULT_WINDOW,
+                              hmi_level,
+                              audio_state,
+                              video_state,
+                              false);
   return true;
 }
 
@@ -2675,6 +2687,46 @@ void ApplicationManagerImpl::set_current_audio_source(const uint32_t source) {
   current_audio_source_ = source;
 }
 
+bool ApplicationManagerImpl::HasWindowAssociatedService(
+    const std::string& service_name) const {
+  return app_widgets_services_map_.end() !=
+         app_widgets_services_map_.find(service_name);
+}
+
+void ApplicationManagerImpl::AssignAppWindowService(
+    const AppWindowIdPair& app_window_pair, const std::string& service_name) {
+  LOG4CXX_AUTO_TRACE(logger_);
+  LOG4CXX_DEBUG(logger_,
+                "Assigning service \"" << service_name << "\" to the app "
+                                       << app_window_pair.first << " window #"
+                                       << app_window_pair.second);
+  app_widgets_services_map_[service_name] = app_window_pair;
+}
+
+void ApplicationManagerImpl::RemoveAppWindowServices(
+    const AppWindowIdPair& app_window_pair) {
+  LOG4CXX_AUTO_TRACE(logger_);
+  LOG4CXX_DEBUG(logger_,
+                "Removing all services assigned to the app "
+                    << app_window_pair.first << " window #"
+                    << app_window_pair.second);
+
+  for (auto it = app_widgets_services_map_.begin();
+       it != app_widgets_services_map_.end();) {
+    const AppWindowIdPair current_id = it->second;
+    if (current_id.first == app_window_pair.first &&
+        current_id.second == app_window_pair.second) {
+      LOG4CXX_DEBUG(logger_,
+                    "Unassigning service \""
+                        << it->first << "\" bound to the current window");
+      it = app_widgets_services_map_.erase(it);
+      continue;
+    }
+
+    ++it;
+  }
+}
+
 void ApplicationManagerImpl::AddPolicyObserver(
     policy::PolicyHandlerObserver* listener) {
   GetPolicyHandler().add_listener(listener);
@@ -3054,7 +3106,8 @@ mobile_apis::Result::eType ApplicationManagerImpl::CheckPolicyPermissions(
     params_permissions->undefined_params = result.list_of_undefined_params;
   }
 
-  if (app->hmi_level() == mobile_apis::HMILevel::HMI_NONE &&
+  if (app->hmi_level(mobile_api::PredefinedWindows::DEFAULT_WINDOW) ==
+          mobile_apis::HMILevel::HMI_NONE &&
       function_id != MessageHelper::StringifiedFunctionID(
                          mobile_apis::FunctionID::UnregisterAppInterfaceID)) {
     if (result.hmi_level_permitted != policy::kRpcAllowed) {
@@ -3065,7 +3118,8 @@ mobile_apis::Result::eType ApplicationManagerImpl::CheckPolicyPermissions(
 #ifdef ENABLE_LOG
   const std::string log_msg =
       "Application: " + app->policy_app_id() + ", RPC: " + function_id +
-      ", HMI status: " + MessageHelper::StringifiedHMILevel(app->hmi_level());
+      ", HMI status: " + MessageHelper::StringifiedHMILevel(app->hmi_level(
+                             mobile_api::PredefinedWindows::DEFAULT_WINDOW));
 #endif  // ENABLE_LOG
   if (result.hmi_level_permitted != policy::kRpcAllowed) {
     LOG4CXX_WARN(logger_, "Request is blocked by policies. " << log_msg);
@@ -3138,7 +3192,10 @@ bool ApplicationManagerImpl::HMILevelAllowsStreaming(
     LOG4CXX_WARN(logger_, "An application is not registered.");
     return false;
   }
-  return Compare<eType, EQ, ONE>(app->hmi_level(), HMI_FULL, HMI_LIMITED);
+  return Compare<eType, EQ, ONE>(
+      app->hmi_level(mobile_api::PredefinedWindows::DEFAULT_WINDOW),
+      HMI_FULL,
+      HMI_LIMITED);
 }
 
 bool ApplicationManagerImpl::CanAppStream(
@@ -3381,10 +3438,10 @@ void ApplicationManagerImpl::SendHMIStatusNotification(
   message[strings::params][strings::connection_key] =
       static_cast<int32_t>(app->app_id());
 
-  message[strings::msg_params][strings::hmi_level] =
-      static_cast<int32_t>(app->hmi_level());
-
   message[strings::msg_params][strings::window_id] = window_id;
+
+  message[strings::msg_params][strings::hmi_level] =
+      static_cast<int32_t>(app->hmi_level(window_id));
 
   message[strings::msg_params][strings::audio_streaming_state] =
       static_cast<int32_t>(app->audio_streaming_state());
@@ -3393,7 +3450,7 @@ void ApplicationManagerImpl::SendHMIStatusNotification(
       static_cast<int32_t>(app->video_streaming_state());
 
   message[strings::msg_params][strings::system_context] =
-      static_cast<int32_t>(app->system_context());
+      static_cast<int32_t>(app->system_context(window_id));
 
   rpc_service_->ManageMobileCommand(notification,
                                     commands::Command::SOURCE_SDL);
@@ -3829,13 +3886,18 @@ void ApplicationManagerImpl::OnUpdateHMIAppType(
       if (flag_diffirence_app_hmi_type) {
         (*it)->set_app_types(transform_app_hmi_types);
         (*it)->ChangeSupportingAppHMIType();
-        if ((*it)->hmi_level() == mobile_api::HMILevel::HMI_BACKGROUND) {
+        const mobile_apis::HMILevel::eType app_hmi_level =
+            (*it)->hmi_level(mobile_apis::PredefinedWindows::DEFAULT_WINDOW);
+        if (app_hmi_level == mobile_api::HMILevel::HMI_BACKGROUND) {
           MessageHelper::SendUIChangeRegistrationRequestToHMI(*it, *this);
-        } else if (((*it)->hmi_level() == mobile_api::HMILevel::HMI_FULL) ||
-                   ((*it)->hmi_level() == mobile_api::HMILevel::HMI_LIMITED)) {
+        } else if ((app_hmi_level == mobile_api::HMILevel::HMI_FULL) ||
+                   (app_hmi_level == mobile_api::HMILevel::HMI_LIMITED)) {
           MessageHelper::SendUIChangeRegistrationRequestToHMI(*it, *this);
           state_controller().SetRegularState(
-              *it, mobile_apis::HMILevel::HMI_BACKGROUND, true);
+              *it,
+              mobile_apis::PredefinedWindows::DEFAULT_WINDOW,
+              mobile_apis::HMILevel::HMI_BACKGROUND,
+              true);
         }
       }
     }
@@ -4301,7 +4363,8 @@ void ApplicationManagerImpl::ChangeAppsHMILevel(
     LOG4CXX_ERROR(logger_, "There is no app with id: " << app_id);
     return;
   }
-  const mobile_apis::HMILevel::eType old_level = app->hmi_level();
+  const mobile_apis::HMILevel::eType old_level =
+      app->hmi_level(mobile_api::PredefinedWindows::DEFAULT_WINDOW);
   if (old_level != level) {
     app->set_hmi_level(mobile_apis::PredefinedWindows::DEFAULT_WINDOW, level);
     OnHMILevelChanged(app_id, old_level, level);

@@ -31,7 +31,10 @@
  */
 
 #include "application_manager/application_state.h"
+
 #include <algorithm>
+#include <string>
+
 #include "utils/logger.h"
 #include "utils/macro.h"
 
@@ -93,10 +96,15 @@ void ApplicationState::RemoveState(const WindowID window_id,
   switch (state) {
     case HmiState::StateID::STATE_ID_CURRENT:
     case HmiState::StateID::STATE_ID_REGULAR:
-      LOG4CXX_ERROR(logger_,
-                    "State of type '" << state
-                                      << "' can't be removed for window "
-                                      << window_id);
+      if (mobile_apis::PredefinedWindows::DEFAULT_WINDOW == window_id) {
+        LOG4CXX_ERROR(logger_,
+                      "State of type '" << state
+                                        << "' can't be removed for window "
+                                        << window_id);
+        return;
+      }
+
+      RemoveWindowHMIStates(window_id);
       break;
     case HmiState::StateID::STATE_ID_POSTPONED:
       RemovePostponedState(window_id);
@@ -128,11 +136,9 @@ HmiStates ApplicationState::GetStates(const HmiState::StateID state_id) const {
 
   HmiStates hmi_states;
   sync_primitives::AutoLock auto_lock(hmi_states_map_lock_);
-  std::for_each(hmi_states_map_.begin(),
-                hmi_states_map_.end(),
-                [&](HmiStatesMap::value_type value) {
-                  hmi_states.push_back(GetState(value.first, state_id));
-                });
+  for (const auto& hmi_state_pair : hmi_states_map_) {
+    hmi_states.push_back(GetState(hmi_state_pair.first, state_id));
+  }
 
   return hmi_states;
 }
@@ -141,13 +147,17 @@ WindowIds ApplicationState::GetWindowIds() const {
   LOG4CXX_DEBUG(logger_, "Collecting available window ID's");
 
   WindowIds window_ids;
-  sync_primitives::AutoLock auto_lock(hmi_states_map_lock_);
-  std::for_each(hmi_states_map_.begin(),
-                hmi_states_map_.end(),
-                [&](HmiStatesMap::value_type value) {
-                  window_ids.push_back(value.first);
-                });
+  std::string stringified_window_ids;
 
+  sync_primitives::AutoLock auto_lock(hmi_states_map_lock_);
+  for (const auto& hmi_state_pair : hmi_states_map_) {
+    window_ids.push_back(hmi_state_pair.first);
+    stringified_window_ids += (stringified_window_ids.empty() ? "" : ", ") +
+                              std::to_string(hmi_state_pair.first);
+  }
+
+  LOG4CXX_DEBUG(logger_,
+                "Existing window IDs: [" + stringified_window_ids + "]");
   return window_ids;
 }
 
@@ -179,7 +189,7 @@ void ApplicationState::RemoveHMIState(const WindowID window_id,
   HmiStates& hmi_states = hmi_states_map_[window_id];
   HmiStates::iterator it = std::find_if(
       hmi_states.begin(), hmi_states.end(), StateIDComparator(state_id));
-  if (it == hmi_states.end()) {
+  if (hmi_states.end() == it) {
     LOG4CXX_ERROR(logger_,
                   "Unsuccesful remove HmiState: " << state_id << " for window "
                                                   << window_id);
@@ -187,7 +197,7 @@ void ApplicationState::RemoveHMIState(const WindowID window_id,
   }
 
   // unable to remove regular state
-  DCHECK_OR_RETURN_VOID(it != hmi_states.begin());
+  DCHECK_OR_RETURN_VOID(hmi_states.begin() != it);
   HmiStates::iterator next = it;
   HmiStates::iterator prev = it;
   next++;
@@ -200,6 +210,17 @@ void ApplicationState::RemoveHMIState(const WindowID window_id,
   }
 
   hmi_states.erase(it);
+}
+
+void ApplicationState::RemoveWindowHMIStates(const WindowID window_id) {
+  LOG4CXX_AUTO_TRACE(logger_);
+  DCHECK_OR_RETURN_VOID(mobile_apis::PredefinedWindows::DEFAULT_WINDOW !=
+                        window_id);
+
+  LOG4CXX_DEBUG(logger_,
+                "Removing HMI states for window with id #" << window_id);
+  sync_primitives::AutoLock auto_lock(hmi_states_map_lock_);
+  hmi_states_map_.erase(window_id);
 }
 
 void ApplicationState::RemovePostponedState(const WindowID window_id) {

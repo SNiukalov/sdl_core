@@ -102,6 +102,12 @@ class StateControllerImpl : public event_engine::EventObserver,
       ApplicationSharedPtr app,
       const mobile_apis::HMILevel::eType default_level) OVERRIDE;
 
+  void OnAppWindowAdded(
+      ApplicationSharedPtr app,
+      const WindowID window_id,
+      const mobile_apis::WindowType::eType window_type,
+      const mobile_apis::HMILevel::eType default_level) OVERRIDE;
+
   void OnVideoStreamingStarted(ApplicationConstSharedPtr app) OVERRIDE;
 
   void OnVideoStreamingStopped(ApplicationConstSharedPtr app) OVERRIDE;
@@ -237,8 +243,7 @@ class StateControllerImpl : public event_engine::EventObserver,
     DCHECK_OR_RETURN_VOID(app);
     const WindowIds window_ids = app->GetWindowIds();
 
-    for (auto it = window_ids.begin(); it != window_ids.end(); ++it) {
-      const WindowID window_id = *it;
+    for (auto window_id : window_ids) {
       HmiStatePtr old_hmi_state = app->CurrentHmiState(window_id);
       HmiStatePtr new_hmi_state = CreateHmiState(app, ID);
       DCHECK_OR_RETURN_VOID(new_hmi_state);
@@ -279,8 +284,7 @@ class StateControllerImpl : public event_engine::EventObserver,
     DCHECK_OR_RETURN_VOID(app);
     const WindowIds window_ids = app->GetWindowIds();
 
-    for (auto it = window_ids.begin(); it != window_ids.end(); ++it) {
-      const WindowID window_id = *it;
+    for (auto window_id : window_ids) {
       HmiStatePtr cur = app->CurrentHmiState(window_id);
       HmiStatePtr old_hmi_state =
           CreateHmiState(app, HmiState::StateID::STATE_ID_REGULAR);
@@ -306,6 +310,14 @@ class StateControllerImpl : public event_engine::EventObserver,
   void ApplyRegularState(ApplicationSharedPtr app,
                          const WindowID window_id,
                          HmiStatePtr state);
+  /**
+   * @brief UpdateAppWindowsStreamingState updates all application windows
+   * audio/video streaming state according to a new application state
+   * @param app pointer to affected application
+   * @param state pointer to state with the new streaming states
+   */
+  void UpdateAppWindowsStreamingState(ApplicationSharedPtr app,
+                                      HmiStatePtr state);
 
   /**
    * @brief SetupRegularHmiState set regular HMI State without

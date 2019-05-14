@@ -199,12 +199,17 @@ class ApplicationManagerImpl
 
   void set_current_audio_source(const uint32_t source) OVERRIDE;
 
+  bool HasWindowAssociatedService(
+      const std::string& service_name) const OVERRIDE;
+
+  void AssignAppWindowService(const AppWindowIdPair& app_window_pair,
+                              const std::string& service_name) OVERRIDE;
+
+  void RemoveAppWindowServices(const AppWindowIdPair& app_window_pair) OVERRIDE;
+
   void OnHMILevelChanged(uint32_t app_id,
                          mobile_apis::HMILevel::eType from,
                          mobile_apis::HMILevel::eType to) OVERRIDE;
-
-  void SendHMIStatusNotification(const std::shared_ptr<Application> app,
-                                 const WindowID window_id) OVERRIDE;
 
   void SendDriverDistractionState(ApplicationSharedPtr application);
 
@@ -1531,6 +1536,9 @@ class ApplicationManagerImpl
 
   sync_primitives::Lock app_icon_map_lock_ptr_;
   std::map<std::string, AppIconInfo> app_icon_map_;
+
+  typedef std::map<std::string, AppWindowIdPair> AppWidgetsServicesMap;
+  AppWidgetsServicesMap app_widgets_services_map_;
 
 #ifdef TELEMETRY_MONITOR
   AMTelemetryObserver* metric_observer_;

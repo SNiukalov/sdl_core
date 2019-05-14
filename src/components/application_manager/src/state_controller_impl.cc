@@ -663,6 +663,37 @@ void StateControllerImpl::ApplyRegularState(ApplicationSharedPtr app,
                 "Resolving HMI level conflicts for app " << app->app_id());
   ForEachApplication(HmiLevelConflictResolver(app, window_id, state, this));
 }
+
+void StateControllerImpl::UpdateAppWindowsStreamingState(
+    ApplicationSharedPtr app, HmiStatePtr state) {
+  LOG4CXX_AUTO_TRACE(logger_);
+  const auto window_ids = app->GetWindowIds();
+  for (auto window_id : window_ids) {
+    HmiStatePtr window_hmi_state = app->RegularHmiState(window_id);
+    if (window_hmi_state->audio_streaming_state() !=
+            state->audio_streaming_state() ||
+        window_hmi_state->video_streaming_state() !=
+            state->video_streaming_state()) {
+      LOG4CXX_DEBUG(logger_,
+                    "Updating streaming state for window #" << window_id);
+
+      HmiStatePtr new_window_state =
+          CreateHmiState(app, HmiState::StateID::STATE_ID_REGULAR);
+      DCHECK_OR_RETURN_VOID(new_window_state);
+      new_window_state->set_hmi_level(window_hmi_state->hmi_level());
+      new_window_state->set_audio_streaming_state(
+          state->audio_streaming_state());
+      new_window_state->set_video_streaming_state(
+          state->video_streaming_state());
+      new_window_state->set_system_context(window_hmi_state->system_context());
+      new_window_state->set_window_type(window_hmi_state->window_type());
+      app->SetRegularState(window_id, new_window_state);
+
+      app_mngr_.SendHMIStatusNotification(app, window_id);
+    }
+  }
+}
+
 void StateControllerImpl::on_event(const event_engine::MobileEvent& event) {}
 
 void StateControllerImpl::on_event(const event_engine::Event& event) {
@@ -787,9 +818,13 @@ void StateControllerImpl::OnStateChanged(ApplicationSharedPtr app,
   if (mobile_apis::PredefinedWindows::DEFAULT_WINDOW != window_id) {
     LOG4CXX_DEBUG(logger_,
                   "State was changed not for a main application window. No "
-                  "need to update statistics");
+                  "additional actions required");
     return;
   }
+
+  // If streaming state of main app window has changed, all other widgets
+  // streaming state should be updated as well
+  UpdateAppWindowsStreamingState(app, new_state);
 
   if (new_state->hmi_level() == mobile_apis::HMILevel::HMI_NONE) {
     app->ResetDataInNone();
@@ -808,15 +843,25 @@ bool StateControllerImpl::IsTempStateActive(HmiState::StateID id) const {
 void StateControllerImpl::OnApplicationRegistered(
     ApplicationSharedPtr app,
     const mobile_apis::HMILevel::eType default_level) {
+  LOG4CXX_AUTO_TRACE(logger_);
+
+  // After app registration HMI level should be set for DEFAUL_WINDOW only
+  OnAppWindowAdded(app,
+                   mobile_apis::PredefinedWindows::DEFAULT_WINDOW,
+                   mobile_apis::WindowType::MAIN,
+                   default_level);
+}
+
+void StateControllerImpl::OnAppWindowAdded(
+    ApplicationSharedPtr app,
+    const WindowID window_id,
+    const mobile_apis::WindowType::eType window_type,
+    const mobile_apis::HMILevel::eType default_level) {
   namespace HMILevel = mobile_apis::HMILevel;
   namespace AudioStreamingState = mobile_apis::AudioStreamingState;
   namespace SystemContext = mobile_apis::SystemContext;
   LOG4CXX_AUTO_TRACE(logger_);
   DCHECK_OR_RETURN_VOID(app);
-
-  // After app registration HMI level should be set for DEFAUL_WINDOW only
-  const WindowID default_window_id =
-      mobile_apis::PredefinedWindows::DEFAULT_WINDOW;
 
   {
     sync_primitives::AutoLock lck(active_states_lock_);
@@ -825,10 +870,10 @@ void StateControllerImpl::OnApplicationRegistered(
       DCHECK_OR_RETURN_VOID(new_state);
       DCHECK_OR_RETURN_VOID(new_state->state_id() !=
                             HmiState::STATE_ID_REGULAR);
-      HmiStatePtr old_hmi_state = app->CurrentHmiState(default_window_id);
+      HmiStatePtr old_hmi_state = app->CurrentHmiState(window_id);
       new_state->set_parent(old_hmi_state);
       new_state->set_window_type(old_hmi_state->window_type());
-      app->AddHMIState(default_window_id, new_state);
+      app->AddHMIState(window_id, new_state);
     }
   }
 
@@ -839,15 +884,15 @@ void StateControllerImpl::OnApplicationRegistered(
   default_state->set_audio_streaming_state(CalcAudioState(app, default_level));
   default_state->set_video_streaming_state(CalcVideoState(app, default_level));
   default_state->set_system_context(SystemContext::SYSCTXT_MAIN);
-  default_state->set_window_type(mobile_apis::WindowType::MAIN);
+  default_state->set_window_type(window_type);
 
-  HmiStatePtr initial_state = app->RegularHmiState(default_window_id);
+  HmiStatePtr initial_state = app->RegularHmiState(window_id);
 
-  app->SetRegularState(default_window_id, default_state);
+  app->SetRegularState(window_id, default_state);
 
-  HmiStatePtr new_state = app->CurrentHmiState(default_window_id);
+  HmiStatePtr new_state = app->CurrentHmiState(window_id);
 
-  OnStateChanged(app, default_window_id, initial_state, new_state);
+  OnStateChanged(app, window_id, initial_state, new_state);
 }
 
 int64_t StateControllerImpl::SendBCActivateApp(
@@ -881,8 +926,7 @@ void StateControllerImpl::ApplyPostponedStateForApp(ApplicationSharedPtr app) {
   LOG4CXX_AUTO_TRACE(logger_);
   const WindowIds window_ids = app->GetWindowIds();
 
-  for (auto it = window_ids.begin(); it != window_ids.end(); ++it) {
-    const WindowID window_id = *it;
+  for (const auto& window_id : window_ids) {
     HmiStatePtr state = app->PostponedHmiState(window_id);
     if (state) {
       app->RemovePostponedState(window_id);
@@ -928,7 +972,7 @@ void StateControllerImpl::DeactivateApp(ApplicationSharedPtr app,
 
   LOG4CXX_DEBUG(logger_,
                 "Window #" << window_id << " current HMI level: '"
-                           << app->hmi_level() << "'");
+                           << app->hmi_level(window_id) << "'");
   const bool is_audio_app = app->IsAudioApplication();
   const bool is_video_app = app->IsVideoApplication();
 
@@ -970,9 +1014,6 @@ void StateControllerImpl::OnActivateAppResponse(
   if (application && hmi_apis::Common_Result::SUCCESS == code) {
     HmiStatePtr pending_state = waiting_for_activate_[application->app_id()];
     DCHECK_OR_RETURN_VOID(pending_state);
-
-    // TODO(AKalinich): Update implementation if OnActivateApp response can be
-    // not only for a default window
     ApplyRegularState(application,
                       mobile_apis::PredefinedWindows::DEFAULT_WINDOW,
                       pending_state);
@@ -996,7 +1037,17 @@ void StateControllerImpl::OnAppActivated(
     window_id = message[strings::msg_params][strings::window_id].asUInt();
   }
 
-  SetRegularState(app, window_id, HMILevel::HMI_FULL, true);
+  const auto window_ids = app->GetWindowIds();
+  if (!helpers::in_range(window_ids, window_id)) {
+    LOG4CXX_ERROR(
+        logger_,
+        "Application " << app_id << " does not contain window #" << window_id);
+    return;
+  }
+
+  const bool should_send_activate_app =
+      mobile_apis::PredefinedWindows::DEFAULT_WINDOW == window_id;
+  SetRegularState(app, window_id, HMILevel::HMI_FULL, should_send_activate_app);
 }
 
 void StateControllerImpl::OnAppDeactivated(
@@ -1014,6 +1065,14 @@ void StateControllerImpl::OnAppDeactivated(
   WindowID window_id = mobile_apis::PredefinedWindows::DEFAULT_WINDOW;
   if (message[strings::msg_params].keyExists(strings::window_id)) {
     window_id = message[strings::msg_params][strings::window_id].asUInt();
+  }
+
+  const auto window_ids = app->GetWindowIds();
+  if (!helpers::in_range(window_ids, window_id)) {
+    LOG4CXX_ERROR(
+        logger_,
+        "Application " << app_id << " does not contain window #" << window_id);
+    return;
   }
 
   if (HMILevel::HMI_FULL != app->hmi_level(window_id)) {

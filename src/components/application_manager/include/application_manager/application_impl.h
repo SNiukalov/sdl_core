@@ -159,14 +159,12 @@ class ApplicationImpl : public virtual Application,
   bool is_foreground() const OVERRIDE;
   void set_foreground(const bool is_foreground) OVERRIDE;
   const mobile_apis::HMILevel::eType hmi_level(
-      const WindowID window_id =
-          mobile_apis::PredefinedWindows::DEFAULT_WINDOW) const OVERRIDE;
+      const WindowID window_id) const OVERRIDE;
   const uint32_t put_file_in_none_count() const;
   const uint32_t delete_file_in_none_count() const;
   const uint32_t list_files_in_none_count() const;
   const mobile_api::SystemContext::eType system_context(
-      const WindowID window_id =
-          mobile_apis::PredefinedWindows::DEFAULT_WINDOW) const OVERRIDE;
+      const WindowID window_id) const OVERRIDE;
   inline const mobile_apis::AudioStreamingState::eType audio_streaming_state()
       const;
   inline const mobile_apis::VideoStreamingState::eType video_streaming_state()

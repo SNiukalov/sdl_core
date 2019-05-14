@@ -132,6 +132,13 @@ class ApplicationState {
   void RemoveHMIState(const WindowID window_id, HmiState::StateID state_id);
 
   /**
+   * @brief RemoveWindowHMIStates removes all HMI states related to specified
+   * window
+   * @param window_id window ID to remove
+   */
+  void RemoveWindowHMIStates(const WindowID window_id);
+
+  /**
    * @brief Removes postponed state
    * @param window_id window id for HMI state
    */
