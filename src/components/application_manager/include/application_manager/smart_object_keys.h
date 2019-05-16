@@ -198,6 +198,13 @@ extern const char* hybrid_app_preference;
 extern const char* is_cloud_application;
 extern const char* cloud_connection_status;
 extern const char* endpoint;
+extern const char* display_capabilities;
+extern const char* window_type_supported;
+extern const char* window_capabilities;
+extern const char* text_fields;
+extern const char* image_fields;
+extern const char* button_capabilities;
+extern const char* display_type;
 
 // PutFile
 extern const char* sync_file_name;

@@ -152,6 +152,17 @@ void GetSystemCapabilityRequest::Run() {
                              all_services);
       break;
     }
+    case mobile_apis::SystemCapabilityType::DISPLAY: {
+      if (!hmi_capabilities.system_display_capabilities()) {
+        SendResponse(false, mobile_apis::Result::DATA_NOT_AVAILABLE);
+        LOG4CXX_INFO(logger_, "system_display_capabilities are not available");
+        return;
+      }
+      response_params[strings::system_capability]
+                     [strings::display_capabilities] =
+                         *hmi_capabilities.system_display_capabilities();
+      break;
+    }
     default:  // Return unsupported resource
       SendResponse(false, mobile_apis::Result::UNSUPPORTED_RESOURCE);
       return;

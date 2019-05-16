@@ -33,6 +33,7 @@
 #include <map>
 
 #include "application_manager/application_manager.h"
+#include "application_manager/hmi_capabilities_converter.h"
 #include "application_manager/hmi_capabilities_impl.h"
 #include "application_manager/message_helper.h"
 #include "application_manager/smart_object_keys.h"
@@ -388,6 +389,7 @@ HMICapabilitiesImpl::HMICapabilitiesImpl(ApplicationManager& app_mngr)
     , tts_supported_languages_(NULL)
     , vr_supported_languages_(NULL)
     , display_capabilities_(NULL)
+    , system_display_capabilities_(NULL)
     , hmi_zone_capabilities_(NULL)
     , soft_buttons_capabilities_(NULL)
     , button_capabilities_(NULL)
@@ -424,6 +426,7 @@ HMICapabilitiesImpl::~HMICapabilitiesImpl() {
   delete tts_supported_languages_;
   delete vr_supported_languages_;
   delete display_capabilities_;
+  delete system_display_capabilities_;
   delete hmi_zone_capabilities_;
   delete soft_buttons_capabilities_;
   delete button_capabilities_;
@@ -566,6 +569,15 @@ void HMICapabilitiesImpl::set_display_capabilities(
     display_capabilities_ =
         new smart_objects::SmartObject(display_capabilities);
   }
+}
+
+void HMICapabilitiesImpl::set_system_display_capabilities(
+    const smart_objects::SmartObject& display_capabilities) {
+  if (system_display_capabilities_) {
+    delete system_display_capabilities_;
+  }
+  system_display_capabilities_ =
+      new smart_objects::SmartObject(display_capabilities);
 }
 
 void HMICapabilitiesImpl::set_hmi_zone_capabilities(
@@ -756,6 +768,11 @@ const smart_objects::SmartObject* HMICapabilitiesImpl::tts_supported_languages()
 const smart_objects::SmartObject* HMICapabilitiesImpl::display_capabilities()
     const {
   return display_capabilities_;
+}
+
+const smart_objects::SmartObject*
+HMICapabilitiesImpl::system_display_capabilities() const {
+  return system_display_capabilities_;
 }
 
 const smart_objects::SmartObject* HMICapabilitiesImpl::hmi_zone_capabilities()
@@ -1196,6 +1213,19 @@ bool HMICapabilitiesImpl::load_capabilities_from_file() {
           if (!rc_capability_so.empty()) {
             set_rc_supported(true);
           }
+        }
+
+        smart_objects::SmartObject system_capabilities_so;
+        formatters::CFormatterJsonBase::jsonValueToObj(system_capabilities,
+                                                       system_capabilities_so);
+
+        if (HMICapabilitiesConverter::ArrayConvertPattern(
+                system_capabilities_so,
+                strings::display_capabilities,
+                HMICapabilitiesConverter::ConvertDisplayCapability,
+                HMICapabilitiesConverter::Required::MANDATORY)) {
+          set_system_display_capabilities(
+              system_capabilities_so[strings::display_capabilities]);
         }
       }
     }  // UI end
