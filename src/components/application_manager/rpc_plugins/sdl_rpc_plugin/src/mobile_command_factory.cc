@@ -44,6 +44,8 @@
 #include "sdl_rpc_plugin/commands/mobile/change_registration_response.h"
 #include "sdl_rpc_plugin/commands/mobile/create_interaction_choice_set_request.h"
 #include "sdl_rpc_plugin/commands/mobile/create_interaction_choice_set_response.h"
+#include "sdl_rpc_plugin/commands/mobile/create_window_request.h"
+#include "sdl_rpc_plugin/commands/mobile/create_window_response.h"
 #include "sdl_rpc_plugin/commands/mobile/delete_command_request.h"
 #include "sdl_rpc_plugin/commands/mobile/delete_command_response.h"
 #include "sdl_rpc_plugin/commands/mobile/delete_file_request.h"
@@ -52,6 +54,8 @@
 #include "sdl_rpc_plugin/commands/mobile/delete_interaction_choice_set_response.h"
 #include "sdl_rpc_plugin/commands/mobile/delete_sub_menu_request.h"
 #include "sdl_rpc_plugin/commands/mobile/delete_sub_menu_response.h"
+#include "sdl_rpc_plugin/commands/mobile/delete_window_request.h"
+#include "sdl_rpc_plugin/commands/mobile/delete_window_response.h"
 #include "sdl_rpc_plugin/commands/mobile/dial_number_request.h"
 #include "sdl_rpc_plugin/commands/mobile/dial_number_response.h"
 #include "sdl_rpc_plugin/commands/mobile/end_audio_pass_thru_request.h"
@@ -170,6 +174,11 @@ CommandCreator& MobileCommandFactory::get_command_creator(
                  ? factory.GetCreator<commands::AddCommandRequest>()
                  : factory.GetCreator<commands::AddCommandResponse>();
     }
+    case mobile_apis::FunctionID::CreateWindowID: {
+      return mobile_api::messageType::request == message_type
+                 ? factory.GetCreator<commands::CreateWindowRequest>()
+                 : factory.GetCreator<commands::CreateWindowResponse>();
+    }
     case mobile_apis::FunctionID::DeleteCommandID: {
       return mobile_api::messageType::request == message_type
                  ? factory.GetCreator<commands::DeleteCommandRequest>()
@@ -184,6 +193,11 @@ CommandCreator& MobileCommandFactory::get_command_creator(
       return mobile_api::messageType::request == message_type
                  ? factory.GetCreator<commands::DeleteSubMenuRequest>()
                  : factory.GetCreator<commands::DeleteSubMenuResponse>();
+    }
+    case mobile_apis::FunctionID::DeleteWindowID: {
+      return mobile_api::messageType::request == message_type
+                 ? factory.GetCreator<commands::DeleteWindowRequest>()
+                 : factory.GetCreator<commands::DeleteWindowResponse>();
     }
     case mobile_apis::FunctionID::DeleteInteractionChoiceSetID: {
       return mobile_api::messageType::request == message_type
