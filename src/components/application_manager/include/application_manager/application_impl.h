@@ -302,9 +302,12 @@ class ApplicationImpl : public virtual Application,
    * @brief SetInitialState sets initial HMI state for application on
    * registration
    * @param window_id window id for HMI state
+   * @param window_name name of inited window
    * @param state Hmi state value
    */
-  void SetInitialState(const WindowID window_id, HmiStatePtr state) FINAL;
+  void SetInitialState(const WindowID window_id,
+                       const std::string& window_name,
+                       HmiStatePtr state) FINAL;
 
   /**
    * @brief SetRegularState set permanent state of application
@@ -354,6 +357,8 @@ class ApplicationImpl : public virtual Application,
    * @return Active HmiState of application
    */
   const HmiStatePtr CurrentHmiState(const WindowID window_i) const FINAL;
+
+  WindowNames GetWindowNames() const FINAL;
 
   WindowIds GetWindowIds() const FINAL;
 

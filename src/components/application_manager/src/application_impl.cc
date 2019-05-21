@@ -321,6 +321,12 @@ const HmiStatePtr ApplicationImpl::RegularHmiState(
   return state_.GetState(window_id, HmiState::STATE_ID_REGULAR);
 }
 
+WindowNames ApplicationImpl::GetWindowNames() const {
+  LOG4CXX_DEBUG(logger_,
+                "Collecting window names for application " << app_id());
+  return state_.GetWindowNames();
+}
+
 WindowIds ApplicationImpl::GetWindowIds() const {
   LOG4CXX_DEBUG(logger_, "Collecting window IDs for application " << app_id());
   return state_.GetWindowIds();
@@ -945,8 +951,9 @@ bool ApplicationImpl::is_application_data_changed() const {
 }
 
 void ApplicationImpl::SetInitialState(const WindowID window_id,
+                                      const std::string& window_name,
                                       HmiStatePtr state) {
-  state_.InitState(window_id, state);
+  state_.InitState(window_id, window_name, state);
 }
 
 void ApplicationImpl::set_is_application_data_changed(

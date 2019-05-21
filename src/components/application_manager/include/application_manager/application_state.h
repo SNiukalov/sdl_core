@@ -45,6 +45,8 @@ namespace application_manager {
 typedef std::vector<WindowID> WindowIds;
 typedef std::vector<HmiStatePtr> HmiStates;
 typedef std::map<WindowID, HmiStates> HmiStatesMap;
+typedef std::vector<std::string> WindowNames;
+typedef std::map<WindowID, std::string> WindowNamesMap;
 
 /*
  * Class represents application state, i.e. current HMI level, audio streaming
@@ -69,9 +71,12 @@ class ApplicationState {
   /**
    * @brief Init state
    * @param window_id window id for HMI state
+   * @param window_name name of inited window
    * @param state Initial state
    */
-  void InitState(const WindowID window_id, HmiStatePtr state);
+  void InitState(const WindowID window_id,
+                 const std::string& window_name,
+                 HmiStatePtr state);
 
   /**
    * @brief Adds state to states storage
@@ -109,6 +114,12 @@ class ApplicationState {
    * @return list of available window ids
    */
   WindowIds GetWindowIds() const;
+
+  /**
+   * @brief Getter f0r a list of all existing window names
+   * @return list of available window names
+   */
+  WindowNames GetWindowNames() const;
 
  private:
   /**
@@ -190,6 +201,16 @@ class ApplicationState {
    * @brief hmi_states_map_lock_
    */
   mutable sync_primitives::Lock hmi_states_map_lock_;
+
+  /**
+   * @brief Map containing the name of each window
+   */
+  WindowNamesMap window_names_map_;
+
+  /**
+   * @brief window_names_map_lock_
+   */
+  mutable sync_primitives::Lock window_names_map_lock_;
 
   DISALLOW_COPY_AND_ASSIGN(ApplicationState);
 };

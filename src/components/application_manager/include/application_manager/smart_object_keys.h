@@ -167,7 +167,6 @@ extern const char* activate_app_hmi_level;
 extern const char* audio_streaming_state;
 extern const char* video_streaming_state;
 extern const char* system_context;
-extern const char* window_id;
 extern const char* window_name;
 extern const char* window_type;
 extern const char* associated_service_type;

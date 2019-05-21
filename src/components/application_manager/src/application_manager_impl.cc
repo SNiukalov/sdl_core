@@ -577,6 +577,7 @@ ApplicationSharedPtr ApplicationManagerImpl::RegisterApplication(
                          mobile_api::SystemContext::SYSCTXT_MAIN);
 
   application->SetInitialState(mobile_apis::PredefinedWindows::DEFAULT_WINDOW,
+                               app_name.AsMBString(),
                                initial_state);
 
   application->set_folder_name(policy_app_id + "_" +

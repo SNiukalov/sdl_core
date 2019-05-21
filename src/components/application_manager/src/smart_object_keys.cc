@@ -134,7 +134,6 @@ const char* activate_app_hmi_level = "level";
 const char* audio_streaming_state = "audioStreamingState";
 const char* video_streaming_state = "videoStreamingState";
 const char* system_context = "systemContext";
-const char* window_id = "windowID";
 const char* window_name = "windowName";
 const char* window_type = "type";
 const char* associated_service_type = "associatedServiceType";

@@ -56,14 +56,22 @@ CREATE_LOGGERPTR_GLOBAL(logger_, "ApplicationManager")
 
 ApplicationState::ApplicationState() {}
 
-void ApplicationState::InitState(const WindowID window_id, HmiStatePtr state) {
+void ApplicationState::InitState(const WindowID window_id,
+                                 const std::string& window_name,
+                                 HmiStatePtr state) {
   LOG4CXX_AUTO_TRACE(logger_);
   DCHECK_OR_RETURN_VOID(state);
   LOG4CXX_DEBUG(logger_,
-                "Initing state " << state << " for window " << window_id);
-  sync_primitives::AutoLock auto_lock(hmi_states_map_lock_);
-  HmiStates& states = hmi_states_map_[window_id];
-  states.push_back(state);
+                "Initing state " << state << " for window " << window_id
+                                 << " with name " << window_name);
+  {
+    sync_primitives::AutoLock auto_lock(hmi_states_map_lock_);
+    HmiStates& states = hmi_states_map_[window_id];
+    states.push_back(state);
+  }
+
+  sync_primitives::AutoLock auto_lock(window_names_map_lock_);
+  window_names_map_[window_id] = window_name;
 }
 
 void ApplicationState::AddState(const WindowID window_id, HmiStatePtr state) {
@@ -161,6 +169,24 @@ WindowIds ApplicationState::GetWindowIds() const {
   return window_ids;
 }
 
+WindowNames ApplicationState::GetWindowNames() const {
+  LOG4CXX_DEBUG(logger_, "Collecting available window names");
+
+  WindowNames window_names;
+  std::string stringified_window_names;
+
+  sync_primitives::AutoLock auto_lock(window_names_map_lock_);
+  for (const auto& window_id_name_pair : window_names_map_) {
+    window_names.push_back(window_id_name_pair.second);
+    stringified_window_names += (stringified_window_names.empty() ? "" : ", ") +
+                                window_id_name_pair.second;
+  }
+
+  LOG4CXX_DEBUG(logger_,
+                "Existing window names: [" + stringified_window_names + "]");
+  return window_names;
+}
+
 void ApplicationState::AddHMIState(const WindowID window_id,
                                    HmiStatePtr state) {
   LOG4CXX_AUTO_TRACE(logger_);
@@ -219,8 +245,13 @@ void ApplicationState::RemoveWindowHMIStates(const WindowID window_id) {
 
   LOG4CXX_DEBUG(logger_,
                 "Removing HMI states for window with id #" << window_id);
-  sync_primitives::AutoLock auto_lock(hmi_states_map_lock_);
-  hmi_states_map_.erase(window_id);
+  {
+    sync_primitives::AutoLock auto_lock(hmi_states_map_lock_);
+    hmi_states_map_.erase(window_id);
+  }
+
+  sync_primitives::AutoLock auto_lock(window_names_map_lock_);
+  window_names_map_.erase(window_id);
 }
 
 void ApplicationState::RemovePostponedState(const WindowID window_id) {
