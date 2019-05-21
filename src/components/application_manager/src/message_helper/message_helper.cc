@@ -3015,4 +3015,14 @@ bool MessageHelper::PrintSmartObject(const smart_objects::SmartObject& object) {
   return true;
 }
 
+WindowID MessageHelper::ExtractWindowIdFromSmartObject(
+    const smart_objects::SmartObject& s_map) {
+  if (smart_objects::SmartType_Map == s_map.getType()) {
+    if (s_map.keyExists(strings::window_id)) {
+      return s_map[strings::window_id].asUInt();
+    }
+  }
+  return mobile_apis::PredefinedWindows::DEFAULT_WINDOW;
+}
+
 }  //  namespace application_manager

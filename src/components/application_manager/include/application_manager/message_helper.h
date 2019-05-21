@@ -718,6 +718,15 @@ class MessageHelper {
    */
   static bool PrintSmartObject(const smart_objects::SmartObject& object);
 
+  /**
+   * @brief Extract window unique ID from message, this id is used for identify
+   * the window
+   * @param s_map contains application's window id
+   * @return window id from current message
+   */
+  static WindowID ExtractWindowIdFromSmartObject(
+      const smart_objects::SmartObject& s_map);
+
   template <typename From, typename To>
   static To ConvertEnumAPINoCheck(const From& input) {
     return static_cast<To>(input);

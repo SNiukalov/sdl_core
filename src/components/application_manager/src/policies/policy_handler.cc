@@ -1534,12 +1534,13 @@ bool PolicyHandler::GetPriority(const std::string& policy_app_id,
 
 void PolicyHandler::CheckPermissions(
     const application_manager::ApplicationSharedPtr app,
+    const application_manager::WindowID window_id,
     const PTString& rpc,
     const RPCParams& rpc_params,
     CheckPermissionResult& result) {
   POLICY_LIB_CHECK_VOID();
-  const std::string hmi_level = MessageHelper::StringifiedHMILevel(
-      app->hmi_level(mobile_apis::PredefinedWindows::DEFAULT_WINDOW));
+  const std::string hmi_level =
+      MessageHelper::StringifiedHMILevel(app->hmi_level(window_id));
   if (hmi_level.empty()) {
     LOG4CXX_WARN(logger_,
                  "HMI level for " << app->policy_app_id() << " is invalid, rpc "

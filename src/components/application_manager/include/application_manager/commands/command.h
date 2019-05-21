@@ -93,6 +93,11 @@ class Command {
   virtual int32_t function_id() const = 0;
 
   /*
+   * @brief Retrieves Window ID
+   */
+  virtual WindowID window_id() const = 0;
+
+  /*
    * @brief Function is called by RequestController when request execution time
    * has exceed it's limit
    *

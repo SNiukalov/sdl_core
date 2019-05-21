@@ -3045,6 +3045,7 @@ void ApplicationManagerImpl::OnAppUnauthorized(const uint32_t& app_id) {
 
 mobile_apis::Result::eType ApplicationManagerImpl::CheckPolicyPermissions(
     const ApplicationSharedPtr app,
+    const WindowID window_id,
     const std::string& function_id,
     const RPCParams& rpc_params,
     CommandParametersPermissions* params_permissions) {
@@ -3057,7 +3058,8 @@ mobile_apis::Result::eType ApplicationManagerImpl::CheckPolicyPermissions(
 
   DCHECK(app);
   policy::CheckPermissionResult result;
-  GetPolicyHandler().CheckPermissions(app, function_id, rpc_params, result);
+  GetPolicyHandler().CheckPermissions(
+      app, window_id, function_id, rpc_params, result);
 
   if (NULL != params_permissions) {
     params_permissions->allowed_params = result.list_of_allowed_params;
@@ -3065,8 +3067,7 @@ mobile_apis::Result::eType ApplicationManagerImpl::CheckPolicyPermissions(
     params_permissions->undefined_params = result.list_of_undefined_params;
   }
 
-  if (app->hmi_level(mobile_api::PredefinedWindows::DEFAULT_WINDOW) ==
-          mobile_apis::HMILevel::HMI_NONE &&
+  if (app->hmi_level(window_id) == mobile_apis::HMILevel::HMI_NONE &&
       function_id != MessageHelper::StringifiedFunctionID(
                          mobile_apis::FunctionID::UnregisterAppInterfaceID)) {
     if (result.hmi_level_permitted != policy::kRpcAllowed) {
@@ -3077,9 +3078,8 @@ mobile_apis::Result::eType ApplicationManagerImpl::CheckPolicyPermissions(
 #ifdef ENABLE_LOG
   const std::string log_msg =
       "Application: " + app->policy_app_id() + ", RPC: " + function_id +
-      ", HMI status: " +
-      MessageHelper::StringifiedHMILevel(
-          app->hmi_level(mobile_api::PredefinedWindows::DEFAULT_WINDOW));
+      ", window_id: " + std::to_string(window_id) + ", HMI status: " +
+      MessageHelper::StringifiedHMILevel(app->hmi_level(window_id));
 #endif  // ENABLE_LOG
   if (result.hmi_level_permitted != policy::kRpcAllowed) {
     LOG4CXX_WARN(logger_, "Request is blocked by policies. " << log_msg);
@@ -3324,9 +3324,11 @@ void ApplicationManagerImpl::ProcessPostponedMessages(const uint32_t app_id) {
     const std::string function_id = MessageHelper::StringifiedFunctionID(
         static_cast<mobile_apis::FunctionID::eType>(
             (*message)[strings::params][strings::function_id].asUInt()));
+    const WindowID window_id = MessageHelper::ExtractWindowIdFromSmartObject(
+        (*message)[strings::msg_params]);
     const RPCParams params;
     const mobile_apis::Result::eType check_result =
-        CheckPolicyPermissions(app, function_id, params);
+        CheckPolicyPermissions(app, window_id, function_id, params);
     if (mobile_api::Result::SUCCESS == check_result) {
       rpc_service_->ManageMobileCommand(message, commands::Command::SOURCE_SDL);
     } else {
@@ -3918,7 +3920,10 @@ void ApplicationManagerImpl::SendDriverDistractionState(
               .asUInt()));
   const RPCParams params;
   const mobile_apis::Result::eType check_result =
-      CheckPolicyPermissions(application, function_id, params);
+      CheckPolicyPermissions(application,
+                             mobile_apis::PredefinedWindows::DEFAULT_WINDOW,
+                             function_id,
+                             params);
   if (mobile_api::Result::SUCCESS == check_result) {
     rpc_service_->ManageMobileCommand(on_driver_distraction,
                                       commands::Command::SOURCE_SDL);
