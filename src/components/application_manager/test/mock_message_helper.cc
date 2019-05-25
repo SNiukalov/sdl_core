@@ -584,6 +584,12 @@ smart_objects::SmartObject MessageHelper::CreateAppServiceCapabilities(
       all_services);
 }
 
+smart_objects::SmartObject MessageHelper::CreateDisplayCapabilities(
+    const HMICapabilities& hmi_capabilities) {
+  return MockMessageHelper::message_helper_mock()->CreateDisplayCapabilities(
+      hmi_capabilities);
+}
+
 void MessageHelper::BroadcastCapabilityUpdate(
     smart_objects::SmartObject& msg_params, ApplicationManager& app_mngr) {
   MockMessageHelper::message_helper_mock()->BroadcastCapabilityUpdate(

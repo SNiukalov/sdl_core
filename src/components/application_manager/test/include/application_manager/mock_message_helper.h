@@ -41,6 +41,7 @@
 #include "policy/policy_types.h"
 #include "smart_objects/smart_object.h"
 #include "transport_manager/common.h"
+#include "application_manager/hmi_capabilities.h"
 
 namespace application_manager {
 
@@ -313,6 +314,9 @@ class MockMessageHelper {
   MOCK_METHOD1(CreateAppServiceCapabilities,
                smart_objects::SmartObject(
                    std::vector<smart_objects::SmartObject>& all_services));
+  MOCK_METHOD1(
+      CreateDisplayCapabilities,
+      smart_objects::SmartObject(const HMICapabilities& hmi_capabilities));
   MOCK_METHOD2(BroadcastCapabilityUpdate,
                void(smart_objects::SmartObject& msg_params,
                     ApplicationManager& app_mngr));

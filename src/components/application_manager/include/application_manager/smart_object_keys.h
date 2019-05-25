@@ -53,6 +53,7 @@ extern const char* info;
 extern const char* app_id;
 extern const char* full_app_id;
 extern const char* bundle_id;
+extern const char* window_id;
 extern const char* app_info;
 extern const char* app_launch;
 extern const char* app_launch_list;
@@ -189,6 +190,8 @@ extern const char* red;
 extern const char* green;
 extern const char* blue;
 extern const char* display_layout;
+extern const char* template_configuration;
+extern const char* template_layout;
 extern const char* icon_resumed;
 extern const char* nicknames;
 extern const char* enabled;
@@ -370,6 +373,8 @@ extern const char* resume_vr_grammars;
 extern const char* ign_off_count;
 
 extern const char* global_ign_on_counter;
+
+extern const char* suspend_count;
 
 extern const char* connection_info;
 extern const char* is_download_complete;

@@ -83,12 +83,28 @@ class ShowRequest : public app_mngr::commands::CommandRequestImpl {
   bool CheckStringsOfShowRequest();
 
   /**
+   * @brief Sends OnSystemCapabilitiesUpdated notification with
+   * capabilities type 'DISPLAY' after response to mobile app
+   * to notify app about existing display capabilities.
+   */
+  void SendOnDisplayCapsUpdatedNotification() const;
+
+  /**
    * @brief Handle the conversion of metadata information from the incoming
    * mobile json message format to the outgoing hmi json message format
    */
   void HandleMetadata(const char* field_id,
                       int32_t field_index,
                       smart_objects::SmartObject& msg_params);
+
+  /**
+   * @brief Handle the template configuration information from the
+   * incoming mobile json message format for specified application
+   * @param app - application for which configuration should be set up
+   * @return True if template config is successfully set up otherwise - false
+   */
+  bool SetTemplateConfigurationForApp(
+      application_manager::Application& app) const;
 
   mobile_apis::Result::eType core_result_code_;
   std::string core_response_info_;

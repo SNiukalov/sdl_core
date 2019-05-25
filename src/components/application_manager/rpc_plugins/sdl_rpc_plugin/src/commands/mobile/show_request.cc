@@ -94,6 +94,65 @@ void ShowRequest::HandleMetadata(const char* field_id,
   }
 }
 
+bool ShowRequest::SetTemplateConfigurationForApp(
+    application_manager::Application& app) const {
+  LOG4CXX_AUTO_TRACE(logger_);
+
+  const auto& template_config =
+      (*message_)[strings::msg_params][strings::template_configuration];
+
+  const auto set_display_layout = [&app, template_config]() -> bool {
+    const auto new_template_layout =
+        template_config[strings::template_layout].asString();
+    const auto old_template_layout = app.display_layout();
+    if (new_template_layout != old_template_layout &&
+        !new_template_layout
+             .empty()) {  // Template switched, allow any color change
+      LOG4CXX_DEBUG(
+          logger_, "Show Request: Setting new Layout: " << new_template_layout);
+      app.set_display_layout(new_template_layout);
+      return true;
+    }
+    LOG4CXX_DEBUG(logger_, "Show Request: No Layout Change");
+    return false;
+  };
+
+  const auto set_day_color_scheme = [&app, template_config]() -> bool {
+    if (template_config.keyExists(strings::day_color_scheme) &&
+        app.day_color_scheme() &&
+        !(template_config[strings::day_color_scheme] ==
+          *(app.day_color_scheme()))) {
+      // Color scheme param exists and has been previously set, do not allow
+      // color change
+      LOG4CXX_DEBUG(logger_, "Reject Day Color Scheme Change");
+      return false;
+    }
+    LOG4CXX_DEBUG(logger_, "Allow Day Color Scheme Change");
+    app.set_day_color_scheme(template_config[strings::day_color_scheme]);
+    return true;
+  };
+
+  const auto set_night_color_scheme = [&app, template_config]() -> bool {
+    if (template_config.keyExists(strings::night_color_scheme) &&
+        app.night_color_scheme() &&
+        !(template_config[strings::night_color_scheme] ==
+          *(app.night_color_scheme()))) {
+      // Color scheme param exists and has been previously set, do not allow
+      // color change
+      LOG4CXX_DEBUG(logger_, "Reject Night Color Scheme Change");
+      return false;
+    }
+    LOG4CXX_DEBUG(logger_, "Allow Night Color Scheme Change");
+    app.set_night_color_scheme(template_config[strings::night_color_scheme]);
+    return true;
+  };
+
+  const bool set_schemes_result =
+      (set_day_color_scheme() && set_night_color_scheme());
+
+  return set_display_layout() || set_schemes_result;
+}
+
 void ShowRequest::Run() {
   LOG4CXX_AUTO_TRACE(logger_);
 
@@ -138,8 +197,7 @@ void ShowRequest::Run() {
   mobile_apis::Result::eType verification_result = mobile_apis::Result::SUCCESS;
   if (((*message_)[strings::msg_params].keyExists(strings::graphic)) &&
       ((*message_)[strings::msg_params][strings::graphic][strings::value]
-           .asString())
-          .length()) {
+           .asString()).length()) {
     verification_result = MessageHelper::VerifyImage(
         (*message_)[strings::msg_params][strings::graphic],
         app,
@@ -273,12 +331,27 @@ void ShowRequest::Run() {
         (*message_)[strings::msg_params][strings::custom_presets];
   }
 
+  if ((*message_)[strings::msg_params].keyExists(
+          strings::template_configuration)) {
+    const bool setting_result = SetTemplateConfigurationForApp(*app);
+    if (!setting_result) {
+      SendResponse(false, mobile_apis::Result::REJECTED);
+      return;
+    }
+  }
+
   StartAwaitForInterface(HmiInterfaces::HMI_INTERFACE_UI);
   SendHMIRequest(hmi_apis::FunctionID::UI_Show, &msg_params, true);
 
   app_mngr::commands::MessageSharedPtr persistentData =
       std::make_shared<smart_objects::SmartObject>(msg_params);
   app->set_show_command(*persistentData);
+}
+
+void ShowRequest::SendOnDisplayCapsUpdatedNotification() const {
+  auto display_caps =
+      MessageHelper::CreateDisplayCapabilities(hmi_capabilities_);
+  MessageHelper::BroadcastCapabilityUpdate(display_caps, application_manager_);
 }
 
 void ShowRequest::on_event(const event_engine::Event& event) {
@@ -314,6 +387,7 @@ void ShowRequest::on_event(const event_engine::Event& event) {
                    converted_result_code,
                    response_info.empty() ? NULL : response_info.c_str(),
                    &(message[strings::msg_params]));
+      SendOnDisplayCapsUpdatedNotification();
       break;
     }
     default: {
@@ -399,8 +473,7 @@ bool ShowRequest::CheckStringsOfShowRequest() {
 
   if ((*message_)[strings::msg_params].keyExists(strings::secondary_graphic)) {
     str = (*message_)[strings::msg_params][strings::secondary_graphic]
-                     [strings::value]
-                         .asCharArray();
+                     [strings::value].asCharArray();
     if (!CheckSyntax(str)) {
       LOG4CXX_ERROR(logger_,
                     "Invalid secondary_graphic value syntax check failed");

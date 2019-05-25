@@ -51,6 +51,7 @@
 #include "smart_objects/smart_object.h"
 #include "transport_manager/common.h"
 #include "utils/macro.h"
+#include "application_manager/hmi_capabilities.h"
 
 namespace policy {
 class PolicyHandlerInterface;
@@ -110,6 +111,13 @@ class MessageHelper {
    */
   static void SendHashUpdateNotification(const uint32_t app_id,
                                          ApplicationManager& app_mngr);
+
+  /**
+   * @brief Creates message containing existing display capabilities
+   * @return Smart object containing existing display capabilities
+   */
+  static smart_objects::SmartObject CreateDisplayCapabilities(
+      const HMICapabilities& hmi_capabilities);
 
   /**
    * @brief Sends OnLanguageChange notification to application

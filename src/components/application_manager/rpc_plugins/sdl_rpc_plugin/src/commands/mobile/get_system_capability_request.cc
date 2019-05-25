@@ -146,10 +146,9 @@ void GetSystemCapabilityRequest::Run() {
     case mobile_apis::SystemCapabilityType::APP_SERVICES: {
       auto all_services =
           application_manager_.GetAppServiceManager().GetAllServiceRecords();
-      response_params[strings::system_capability]
-                     [strings::app_services_capabilities] =
-                         MessageHelper::CreateAppServiceCapabilities(
-                             all_services);
+      response_params
+          [strings::system_capability][strings::app_services_capabilities] =
+              MessageHelper::CreateAppServiceCapabilities(all_services);
       break;
     }
     case mobile_apis::SystemCapabilityType::DISPLAY: {
@@ -168,18 +167,21 @@ void GetSystemCapabilityRequest::Run() {
       return;
   }
 
-  if ((*message_)[app_mngr::strings::msg_params].keyExists(
-          strings::subscribe)) {
-    auto& ext = SystemCapabilityAppExtension::ExtractExtension(*app);
-    if ((*message_)[app_mngr::strings::msg_params][strings::subscribe]
-            .asBool() == true) {
-      LOG4CXX_DEBUG(logger_,
-                    "Subscribe to system capability: " << response_type);
-      ext.SubscribeTo(response_type);
-    } else {
-      LOG4CXX_DEBUG(logger_,
-                    "Unsubscribe from system capability: " << response_type);
-      ext.UnsubscribeFrom(response_type);
+  // Ignore subscription/unsubscription for DISPLAY type
+  if (mobile_apis::SystemCapabilityType::DISPLAY != response_type) {
+    if ((*message_)[app_mngr::strings::msg_params].keyExists(
+            strings::subscribe)) {
+      auto& ext = SystemCapabilityAppExtension::ExtractExtension(*app);
+      if ((*message_)[app_mngr::strings::msg_params][strings::subscribe]
+              .asBool() == true) {
+        LOG4CXX_DEBUG(logger_,
+                      "Subscribe to system capability: " << response_type);
+        ext.SubscribeTo(response_type);
+      } else {
+        LOG4CXX_DEBUG(logger_,
+                      "Unsubscribe from system capability: " << response_type);
+        ext.UnsubscribeFrom(response_type);
+      }
     }
   }
 

@@ -63,9 +63,9 @@ class HMICapabilities {
   virtual HMILanguageHandler& get_hmi_language_handler() = 0;
 
   /*
-   * @brief Checks is image type(Static/Dynamic) requested by
+   * @brief Checks if image type(Static/Dynamic) requested by
    * Mobile Device is supported on current HMI.
-   * @param image_type recieved type of image from Enum.
+   * @param image_type received type of image from Enum.
    * @return Bool true if supported
    */
   virtual bool VerifyImageType(const int32_t image_type) const = 0;
