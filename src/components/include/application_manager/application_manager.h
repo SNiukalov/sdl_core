@@ -121,10 +121,6 @@ typedef ApplicationSet::iterator ApplicationSetIt;
 // typedef for Applications list const iterator
 typedef ApplicationSet::const_iterator ApplicationSetConstIt;
 
-// typedef to identify window unique ID which is represented as a pair of app_id
-// + apps internal window ID
-typedef std::pair<uint32_t, WindowID> AppWindowIdPair;
-
 class ApplicationManager {
  public:
   virtual ~ApplicationManager() {}
@@ -269,33 +265,6 @@ class ApplicationManager {
   virtual void set_current_audio_source(const uint32_t source) = 0;
 
   /**
-   * @brief HasWindowAssociatedService checks if there any window id
-   * associated with specified service name
-   * @param service_name service name to check
-   * @return true if window for specified service exists, otherwise returns
-   * false
-   */
-  virtual bool HasWindowAssociatedService(
-      const std::string& service_name) const = 0;
-
-  /**
-   * @brief AssignAppWindowService assigns service name with the
-   * specified window
-   * @param app_window_pair unique ID of window to assign
-   * @param service_name name of service to assign
-   */
-  virtual void AssignAppWindowService(const AppWindowIdPair& app_window_pair,
-                                      const std::string& service_name) = 0;
-
-  /**
-   * @brief RemoveAppWindowServices removes service name if assigned
-   * window has been removed
-   * @param app_window_pair unique ID of window to remove
-   */
-  virtual void RemoveAppWindowServices(
-      const AppWindowIdPair& app_window_pair) = 0;
-
-  /**
    * @brief OnHMILevelChanged the callback that allows SDL to react when
    * application's HMI level has been changed.
    *
@@ -307,15 +276,6 @@ class ApplicationManager {
   virtual void OnHMILevelChanged(uint32_t app_id,
                                  mobile_apis::HMILevel::eType from,
                                  mobile_apis::HMILevel::eType to) = 0;
-
-  /**
-   * @brief Sends HMI status notification to mobile
-   *
-   * @param application_impl application with changed HMI status
-   *
-   **/
-  virtual void SendHMIStatusNotification(const std::shared_ptr<Application> app,
-                                         const WindowID window_id) = 0;
 
   /**
    * @brief Checks if driver distraction state is valid, creates message

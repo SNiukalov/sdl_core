@@ -1361,8 +1361,10 @@ bool RegisterAppInterfaceRequest::IsApplicationSwitched() {
   application_manager_.ProcessReconnection(app, connection_key());
   SendRegisterAppInterfaceResponseToMobile(app_type);
 
-  application_manager_.SendHMIStatusNotification(
-      app, mobile_apis::PredefinedWindows::DEFAULT_WINDOW);
+  MessageHelper::SendHMIStatusNotification(
+      app,
+      mobile_apis::PredefinedWindows::DEFAULT_WINDOW,
+      application_manager_);
 
   application_manager_.OnApplicationSwitched(app);
 

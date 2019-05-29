@@ -172,7 +172,6 @@ ApplicationManagerImpl::ApplicationManagerImpl(
     , state_ctrl_(*this)
     , pending_device_map_lock_ptr_(
           std::make_shared<sync_primitives::RecursiveLock>())
-    , app_widgets_services_map_()
     , application_list_update_timer_(
           "AM ListUpdater",
           new TimerTaskImpl<ApplicationManagerImpl>(
@@ -2687,46 +2686,6 @@ void ApplicationManagerImpl::set_current_audio_source(const uint32_t source) {
   current_audio_source_ = source;
 }
 
-bool ApplicationManagerImpl::HasWindowAssociatedService(
-    const std::string& service_name) const {
-  return app_widgets_services_map_.end() !=
-         app_widgets_services_map_.find(service_name);
-}
-
-void ApplicationManagerImpl::AssignAppWindowService(
-    const AppWindowIdPair& app_window_pair, const std::string& service_name) {
-  LOG4CXX_AUTO_TRACE(logger_);
-  LOG4CXX_DEBUG(logger_,
-                "Assigning service \"" << service_name << "\" to the app "
-                                       << app_window_pair.first << " window #"
-                                       << app_window_pair.second);
-  app_widgets_services_map_[service_name] = app_window_pair;
-}
-
-void ApplicationManagerImpl::RemoveAppWindowServices(
-    const AppWindowIdPair& app_window_pair) {
-  LOG4CXX_AUTO_TRACE(logger_);
-  LOG4CXX_DEBUG(logger_,
-                "Removing all services assigned to the app "
-                    << app_window_pair.first << " window #"
-                    << app_window_pair.second);
-
-  for (auto it = app_widgets_services_map_.begin();
-       it != app_widgets_services_map_.end();) {
-    const AppWindowIdPair current_id = it->second;
-    if (current_id.first == app_window_pair.first &&
-        current_id.second == app_window_pair.second) {
-      LOG4CXX_DEBUG(logger_,
-                    "Unassigning service \""
-                        << it->first << "\" bound to the current window");
-      it = app_widgets_services_map_.erase(it);
-      continue;
-    }
-
-    ++it;
-  }
-}
-
 void ApplicationManagerImpl::AddPolicyObserver(
     policy::PolicyHandlerObserver* listener) {
   GetPolicyHandler().add_listener(listener);
@@ -3419,41 +3378,6 @@ void ApplicationManagerImpl::ProcessApp(const uint32_t app_id,
       EndNaviServices(app_id);
     }
   }
-}
-
-void ApplicationManagerImpl::SendHMIStatusNotification(
-    const std::shared_ptr<Application> app, const WindowID window_id) {
-  LOG4CXX_AUTO_TRACE(logger_);
-  DCHECK_OR_RETURN_VOID(app);
-  smart_objects::SmartObjectSPtr notification =
-      std::make_shared<smart_objects::SmartObject>();
-  smart_objects::SmartObject& message = *notification;
-
-  message[strings::params][strings::function_id] =
-      static_cast<int32_t>(mobile_api::FunctionID::OnHMIStatusID);
-
-  message[strings::params][strings::message_type] =
-      static_cast<int32_t>(application_manager::MessageType::kNotification);
-
-  message[strings::params][strings::connection_key] =
-      static_cast<int32_t>(app->app_id());
-
-  message[strings::msg_params][strings::window_id] = window_id;
-
-  message[strings::msg_params][strings::hmi_level] =
-      static_cast<int32_t>(app->hmi_level(window_id));
-
-  message[strings::msg_params][strings::audio_streaming_state] =
-      static_cast<int32_t>(app->audio_streaming_state());
-
-  message[strings::msg_params][strings::video_streaming_state] =
-      static_cast<int32_t>(app->video_streaming_state());
-
-  message[strings::msg_params][strings::system_context] =
-      static_cast<int32_t>(app->system_context(window_id));
-
-  rpc_service_->ManageMobileCommand(notification,
-                                    commands::Command::SOURCE_SDL);
 }
 
 void ApplicationManagerImpl::ClearTimerPool() {

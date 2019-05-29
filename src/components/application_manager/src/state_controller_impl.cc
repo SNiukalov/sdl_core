@@ -689,7 +689,7 @@ void StateControllerImpl::UpdateAppWindowsStreamingState(
       new_window_state->set_window_type(window_hmi_state->window_type());
       app->SetRegularState(window_id, new_window_state);
 
-      app_mngr_.SendHMIStatusNotification(app, window_id);
+      MessageHelper::SendHMIStatusNotification(app, window_id, app_mngr_);
     }
   }
 }
@@ -813,7 +813,7 @@ void StateControllerImpl::OnStateChanged(ApplicationSharedPtr app,
     return;
   }
 
-  app_mngr_.SendHMIStatusNotification(app, window_id);
+  MessageHelper::SendHMIStatusNotification(app, window_id, app_mngr_);
 
   if (mobile_apis::PredefinedWindows::DEFAULT_WINDOW != window_id) {
     LOG4CXX_DEBUG(logger_,
