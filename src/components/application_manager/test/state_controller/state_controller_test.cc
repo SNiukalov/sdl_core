@@ -78,6 +78,8 @@ namespace state_controller_test {
 namespace constants {
 const uint32_t kCorrID = 314u;
 const uint32_t kHMIAppID = 2718u;
+const am::WindowID kDefaultWindowId =
+    mobile_apis::PredefinedWindows::DEFAULT_WINDOW;
 }  // namespace constants
 
 struct HmiStatesComparator {
@@ -1049,11 +1051,12 @@ class StateControllerImplTest : public ::testing::Test {
       NiceMock<application_manager_test::MockApplication>* app_mock,
       am::HmiStatePtr old_state,
       am::HmiStatePtr new_state) {
-    EXPECT_CALL(*app_mock, CurrentHmiState())
+    EXPECT_CALL(*app_mock, CurrentHmiState(constants::kDefaultWindowId))
         .WillOnce(Return(old_state))
         .WillOnce(Return(new_state));
     EXPECT_CALL(*app_mock,
-                SetRegularState(Truly(HmiStatesComparator(new_state))));
+                SetRegularState(constants::kDefaultWindowId,
+                                Truly(HmiStatesComparator(new_state))));
     if (!HmiStatesComparator(old_state)(new_state)) {
       EXPECT_CALL(app_manager_mock_, SendHMIStatusNotification(app));
       EXPECT_CALL(
@@ -1068,7 +1071,7 @@ class StateControllerImplTest : public ::testing::Test {
       NiceMock<application_manager_test::MockApplication>* app_mock,
       am::HmiStatePtr old_state,
       am::HmiStatePtr new_state) {
-    EXPECT_CALL(*app_mock, RegularHmiState())
+    EXPECT_CALL(*app_mock, RegularHmiState(constants::kDefaultWindowId))
         .WillOnce(Return(old_state))
         .WillOnce(Return(old_state));
     ExpectSuccesfullSetHmiState(app, app_mock, old_state, new_state);
@@ -1078,7 +1081,8 @@ class StateControllerImplTest : public ::testing::Test {
       am::ApplicationSharedPtr app,
       NiceMock<application_manager_test::MockApplication>* app_mock,
       am::HmiStatePtr state) {
-    ON_CALL(*app_mock, RegularHmiState()).WillByDefault(Return(state));
+    ON_CALL(*app_mock, RegularHmiState(constants::kDefaultWindowId))
+        .WillByDefault(Return(state));
     EXPECT_CALL(app_manager_mock_, SendHMIStatusNotification(app)).Times(0);
     EXPECT_CALL(app_manager_mock_, OnHMILevelChanged(app->app_id(), _, _))
         .Times(0);
@@ -1135,13 +1139,14 @@ class StateControllerImplTest : public ::testing::Test {
     using smart_objects::SmartObject;
     namespace FunctionID = hmi_apis::FunctionID;
 
-    EXPECT_CALL(app_mock, CurrentHmiState())
+    EXPECT_CALL(app_mock, CurrentHmiState(constants::kDefaultWindowId))
         .WillRepeatedly(Return(NoneNotAudibleState()));
 
     for (size_t i = 0; i < state_ids.size(); ++i) {
       am::HmiState::StateID state_id = state_ids[i];
       EXPECT_CALL(app_mock,
-                  AddHMIState(Truly(HmiStatesIDComparator(state_id))));
+                  AddHMIState(constants::kDefaultWindowId,
+                              Truly(HmiStatesIDComparator(state_id))));
       switch (state_id) {
         case am::HmiState::StateID::STATE_ID_VR_SESSION: {
           Event vr_start_event(FunctionID::VR_Started);
@@ -1182,7 +1187,8 @@ class StateControllerImplTest : public ::testing::Test {
         default:
           break;
       }
-      EXPECT_CALL(app_mock, AddHMIState(_)).Times(0);
+      EXPECT_CALL(app_mock, AddHMIState(constants::kDefaultWindowId, _))
+          .Times(0);
     }
   }
 
@@ -1194,12 +1200,14 @@ class StateControllerImplTest : public ::testing::Test {
     using smart_objects::SmartObject;
     namespace FunctionID = hmi_apis::FunctionID;
 
-    EXPECT_CALL(app_mock, CurrentHmiState())
+    EXPECT_CALL(app_mock, CurrentHmiState(constants::kDefaultWindowId))
         .WillRepeatedly(Return(NoneNotAudibleState()));
 
     for (uint32_t i = 0; i < state_ids.size(); ++i) {
       am::HmiState::StateID state_id = state_ids[i];
-      EXPECT_CALL(app_mock, AddHMIState(Truly(HmiStatesIDComparator(state_id))))
+      EXPECT_CALL(app_mock,
+                  AddHMIState(constants::kDefaultWindowId,
+                              Truly(HmiStatesIDComparator(state_id))))
           .Times(1);
 
       switch (state_id) {
@@ -1243,16 +1251,19 @@ class StateControllerImplTest : public ::testing::Test {
           break;
       }
 
-      EXPECT_CALL(app_mock, AddHMIState(_)).Times(0);
+      EXPECT_CALL(app_mock, AddHMIState(constants::kDefaultWindowId, _))
+          .Times(0);
     }
 
     for (uint32_t i = 0; i < state_ids.size(); ++i) {
       am::HmiState::StateID state_id = state_ids[i];
-      EXPECT_CALL(app_mock, RemoveHMIState(state_id)).Times(1);
+      EXPECT_CALL(app_mock,
+                  RemoveHMIState(constants::kDefaultWindowId, state_id))
+          .Times(1);
 
-      EXPECT_CALL(app_mock, PostponedHmiState())
+      EXPECT_CALL(app_mock, PostponedHmiState(constants::kDefaultWindowId))
           .WillOnce(Return(NoneNotAudibleState()));
-      EXPECT_CALL(app_mock, RemovePostponedState());
+      EXPECT_CALL(app_mock, RemovePostponedState(constants::kDefaultWindowId));
 
       switch (state_id) {
         case am::HmiState::StateID::STATE_ID_VR_SESSION: {
@@ -1295,7 +1306,8 @@ class StateControllerImplTest : public ::testing::Test {
           break;
       }
 
-      EXPECT_CALL(app_mock, RemoveHMIState(_)).Times(0);
+      EXPECT_CALL(app_mock, RemoveHMIState(constants::kDefaultWindowId, _))
+          .Times(0);
     }
   }
 };
@@ -1307,6 +1319,7 @@ TEST_F(StateControllerImplTest, OnStateChangedWithEqualStates) {
 
   for (uint32_t i = 0; i < valid_states_for_not_audio_app_.size(); ++i) {
     state_ctrl_->OnStateChanged(simple_app_,
+                                constants::kDefaultWindowId,
                                 valid_states_for_not_audio_app_[i],
                                 valid_states_for_not_audio_app_[i]);
   }
@@ -1330,6 +1343,7 @@ TEST_F(StateControllerImplTest, OnStateChangedWithDifferentStates) {
           EXPECT_CALL(*simple_app_ptr_, ResetDataInNone()).Times(1);
         }
         state_ctrl_->OnStateChanged(simple_app_,
+                                    constants::kDefaultWindowId,
                                     valid_states_for_not_audio_app_[i],
                                     valid_states_for_not_audio_app_[j]);
 
@@ -1356,10 +1370,12 @@ TEST_F(StateControllerImplTest, OnStateChangedToNone) {
                      SystemContext::SYSCTXT_MAIN);
 
   EXPECT_CALL(*simple_app_ptr_, ResetDataInNone()).Times(0);
-  state_ctrl_->OnStateChanged(simple_app_, none_state, not_none_state);
+  state_ctrl_->OnStateChanged(
+      simple_app_, constants::kDefaultWindowId, none_state, not_none_state);
 
   EXPECT_CALL(*simple_app_ptr_, ResetDataInNone()).Times(1);
-  state_ctrl_->OnStateChanged(simple_app_, not_none_state, none_state);
+  state_ctrl_->OnStateChanged(
+      simple_app_, constants::kDefaultWindowId, not_none_state, none_state);
 }
 
 TEST_F(StateControllerImplTest, MoveSimpleAppToValidStates) {
@@ -1377,7 +1393,7 @@ TEST_F(StateControllerImplTest, MoveSimpleAppToValidStates) {
        it != valid_states_for_not_audio_app_.end();
        ++it) {
     HmiStatePtr state_to_setup = *it;
-    EXPECT_CALL(*simple_app_ptr_, CurrentHmiState())
+    EXPECT_CALL(*simple_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
         .WillOnce(Return(initial_state))
         .WillOnce(Return(state_to_setup));
     EXPECT_CALL(app_manager_mock_, SendHMIStatusNotification(simple_app_));
@@ -1387,8 +1403,10 @@ TEST_F(StateControllerImplTest, MoveSimpleAppToValidStates) {
                                   state_to_setup->hmi_level()));
 
     EXPECT_CALL(*simple_app_ptr_,
-                SetRegularState(Truly(HmiStatesComparator(state_to_setup))));
-    state_ctrl_->SetRegularState(simple_app_, state_to_setup, false);
+                SetRegularState(constants::kDefaultWindowId,
+                                Truly(HmiStatesComparator(state_to_setup))));
+    state_ctrl_->SetRegularState(
+        simple_app_, constants::kDefaultWindowId, state_to_setup, false);
     initial_state = state_to_setup;
   }
 }
@@ -1413,7 +1431,7 @@ TEST_F(StateControllerImplTest, MoveAudioNotResumeAppToValidStates) {
        it != valid_states_for_audio_app_.end();
        ++it) {
     HmiStatePtr state_to_setup = *it;
-    EXPECT_CALL(*audio_app_mock, CurrentHmiState())
+    EXPECT_CALL(*audio_app_mock, CurrentHmiState(constants::kDefaultWindowId))
         .WillOnce(Return(initial_state))
         .WillOnce(Return(state_to_setup));
     EXPECT_CALL(app_manager_mock_, SendHMIStatusNotification(audio_app));
@@ -1423,8 +1441,10 @@ TEST_F(StateControllerImplTest, MoveAudioNotResumeAppToValidStates) {
                                   state_to_setup->hmi_level()));
 
     EXPECT_CALL(*audio_app_mock,
-                SetRegularState(Truly(HmiStatesComparator(state_to_setup))));
-    state_ctrl_->SetRegularState(media_navi_vc_app_, state_to_setup, false);
+                SetRegularState(constants::kDefaultWindowId,
+                                Truly(HmiStatesComparator(state_to_setup))));
+    state_ctrl_->SetRegularState(
+        media_navi_vc_app_, constants::kDefaultWindowId, state_to_setup, false);
     initial_state = state_to_setup;
   }
 }
@@ -1452,7 +1472,7 @@ TEST_F(StateControllerImplTest, MoveAudioResumeAppToValidStates) {
     HmiStatePtr state_to_setup = *it;
     HmiStatePtr state_to_check = state_to_setup;
     // First time current state is initial, then it changes to setup state
-    EXPECT_CALL(*audio_app_mock, CurrentHmiState())
+    EXPECT_CALL(*audio_app_mock, CurrentHmiState(constants::kDefaultWindowId))
         .WillOnce(Return(initial_state))
         .WillOnce(Return(state_to_setup));
     // Audio resume app when HMI level is LIMITED or FULL gets audible state
@@ -1480,8 +1500,10 @@ TEST_F(StateControllerImplTest, MoveAudioResumeAppToValidStates) {
 
     // Check that we set correct state
     EXPECT_CALL(*audio_app_mock,
-                SetRegularState(Truly(HmiStatesComparator(state_to_check))));
-    state_ctrl_->SetRegularState(media_navi_vc_app_, state_to_setup, false);
+                SetRegularState(constants::kDefaultWindowId,
+                                Truly(HmiStatesComparator(state_to_check))));
+    state_ctrl_->SetRegularState(
+        media_navi_vc_app_, constants::kDefaultWindowId, state_to_setup, false);
     initial_state = state_to_setup;
   }
 }
@@ -1494,11 +1516,15 @@ TEST_F(StateControllerImplTest, MoveAppFromValidStateToInvalid) {
        invalid_state_it != common_invalid_states_.end();
        ++invalid_state_it) {
     HmiStatePtr invalid_state = *invalid_state_it;
-    EXPECT_CALL(*simple_app_ptr_, CurrentHmiState()).Times(0);
+    EXPECT_CALL(*simple_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
+        .Times(0);
     EXPECT_CALL(*simple_app_ptr_, is_resuming()).Times(0);
     EXPECT_CALL(app_manager_mock_, OnHMILevelChanged(_, _, _)).Times(0);
-    EXPECT_CALL(*simple_app_ptr_, SetRegularState(_)).Times(0);
-    state_ctrl_->SetRegularState(simple_app_, invalid_state, false);
+    EXPECT_CALL(*simple_app_ptr_,
+                SetRegularState(constants::kDefaultWindowId, _))
+        .Times(0);
+    state_ctrl_->SetRegularState(
+        simple_app_, constants::kDefaultWindowId, invalid_state, false);
   }
 
   for (std::vector<HmiStatePtr>::iterator invalid_state_it =
@@ -1506,11 +1532,16 @@ TEST_F(StateControllerImplTest, MoveAppFromValidStateToInvalid) {
        invalid_state_it != common_invalid_states_.end();
        ++invalid_state_it) {
     HmiStatePtr invalid_state = *invalid_state_it;
-    EXPECT_CALL(*media_navi_vc_app_ptr_, CurrentHmiState()).Times(0);
+    EXPECT_CALL(*media_navi_vc_app_ptr_,
+                CurrentHmiState(constants::kDefaultWindowId))
+        .Times(0);
     EXPECT_CALL(*media_navi_vc_app_ptr_, is_resuming()).Times(0);
     EXPECT_CALL(app_manager_mock_, OnHMILevelChanged(_, _, _)).Times(0);
-    EXPECT_CALL(*media_navi_vc_app_ptr_, SetRegularState(_)).Times(0);
-    state_ctrl_->SetRegularState(media_navi_vc_app_, invalid_state, false);
+    EXPECT_CALL(*media_navi_vc_app_ptr_,
+                SetRegularState(constants::kDefaultWindowId, _))
+        .Times(0);
+    state_ctrl_->SetRegularState(
+        media_navi_vc_app_, constants::kDefaultWindowId, invalid_state, false);
   }
 }
 
@@ -1540,7 +1571,10 @@ TEST_F(StateControllerImplTest,
   ExpectAppChangeHmiStateDueToConflictResolving(
       app_in_full, app_in_full_mock, FullNotAudibleState(), BackgroundState());
 
-  state_ctrl_->SetRegularState(app_moved_to_full, FullNotAudibleState(), false);
+  state_ctrl_->SetRegularState(app_moved_to_full,
+                               constants::kDefaultWindowId,
+                               FullNotAudibleState(),
+                               false);
 }
 
 TEST_F(StateControllerImplTest, SetFullToSimpleAppWhileAudioAppAppIsInFull) {
@@ -1564,7 +1598,10 @@ TEST_F(StateControllerImplTest, SetFullToSimpleAppWhileAudioAppAppIsInFull) {
 
   ExpectAppChangeHmiStateDueToConflictResolving(
       app_in_full, app_in_full_mock, FullAudibleState(), LimitedState());
-  state_ctrl_->SetRegularState(app_moved_to_full, FullNotAudibleState(), false);
+  state_ctrl_->SetRegularState(app_moved_to_full,
+                               constants::kDefaultWindowId,
+                               FullNotAudibleState(),
+                               false);
 }
 
 TEST_F(StateControllerImplTest,
@@ -1590,7 +1627,10 @@ TEST_F(StateControllerImplTest,
 
   ExpectAppChangeHmiStateDueToConflictResolving(
       app_in_full, app_in_full_mock, FullAudibleState(), LimitedState());
-  state_ctrl_->SetRegularState(app_moved_to_full, FullAudibleState(), false);
+  state_ctrl_->SetRegularState(app_moved_to_full,
+                               constants::kDefaultWindowId,
+                               FullAudibleState(),
+                               false);
 }
 
 TEST_F(StateControllerImplTest,
@@ -1615,7 +1655,10 @@ TEST_F(StateControllerImplTest,
   ExpectAppChangeHmiStateDueToConflictResolving(
       app_in_full, app_in_full_mock, FullAudibleState(), BackgroundState());
 
-  state_ctrl_->SetRegularState(app_moved_to_full, FullAudibleState(), false);
+  state_ctrl_->SetRegularState(app_moved_to_full,
+                               constants::kDefaultWindowId,
+                               FullAudibleState(),
+                               false);
 }
 
 TEST_F(StateControllerImplTest,
@@ -1641,7 +1684,10 @@ TEST_F(StateControllerImplTest,
   ExpectAppChangeHmiStateDueToConflictResolving(
       app_in_limited, app_in_limited_mock, LimitedState(), BackgroundState());
 
-  state_ctrl_->SetRegularState(app_moved_to_full, FullAudibleState(), false);
+  state_ctrl_->SetRegularState(app_moved_to_full,
+                               constants::kDefaultWindowId,
+                               FullAudibleState(),
+                               false);
 }
 
 TEST_F(StateControllerImplTest,
@@ -1668,7 +1714,8 @@ TEST_F(StateControllerImplTest,
   ExpectAppChangeHmiStateDueToConflictResolving(
       app_in_limited, app_in_limited_mock, LimitedState(), BackgroundState());
 
-  state_ctrl_->SetRegularState(app_moved_to_limited, LimitedState(), false);
+  state_ctrl_->SetRegularState(
+      app_moved_to_limited, constants::kDefaultWindowId, LimitedState(), false);
 }
 
 TEST_F(StateControllerImplTest,
@@ -1693,7 +1740,8 @@ TEST_F(StateControllerImplTest,
   ExpectAppWontChangeHmiStateDueToConflictResolving(
       app_in_limited, app_in_limited_mock, LimitedState());
 
-  state_ctrl_->SetRegularState(app_moved_to_limited, LimitedState(), false);
+  state_ctrl_->SetRegularState(
+      app_moved_to_limited, constants::kDefaultWindowId, LimitedState(), false);
 }
 
 TEST_F(StateControllerImplTest,
@@ -1719,7 +1767,8 @@ TEST_F(StateControllerImplTest,
 
   ExpectAppWontChangeHmiStateDueToConflictResolving(
       app_in_full, app_in_full_mock, FullAudibleState());
-  state_ctrl_->SetRegularState(app_moved_to_limited, LimitedState(), false);
+  state_ctrl_->SetRegularState(
+      app_moved_to_limited, constants::kDefaultWindowId, LimitedState(), false);
 }
 
 TEST_F(StateControllerImplTest, SetFullToSimpleAppWhile2AudioAppsInLimited) {
@@ -1753,7 +1802,10 @@ TEST_F(StateControllerImplTest, SetFullToSimpleAppWhile2AudioAppsInLimited) {
   ExpectAppWontChangeHmiStateDueToConflictResolving(
       limited_app2, limited_app2_mock, LimitedState());
 
-  state_ctrl_->SetRegularState(app_moved_to_full, FullNotAudibleState(), false);
+  state_ctrl_->SetRegularState(app_moved_to_full,
+                               constants::kDefaultWindowId,
+                               FullNotAudibleState(),
+                               false);
 }
 
 TEST_F(StateControllerImplTest,
@@ -1789,7 +1841,10 @@ TEST_F(StateControllerImplTest,
   ExpectAppChangeHmiStateDueToConflictResolving(
       full_app, full_app_mock, FullAudibleState(), LimitedState());
 
-  state_ctrl_->SetRegularState(app_moved_to_full, FullNotAudibleState(), false);
+  state_ctrl_->SetRegularState(app_moved_to_full,
+                               constants::kDefaultWindowId,
+                               FullNotAudibleState(),
+                               false);
 }
 
 TEST_F(StateControllerImplTest,
@@ -1825,7 +1880,10 @@ TEST_F(StateControllerImplTest,
   ExpectAppChangeHmiStateDueToConflictResolving(
       full_app, full_app_mock, FullNotAudibleState(), BackgroundState());
 
-  state_ctrl_->SetRegularState(app_moved_to_full, FullNotAudibleState(), false);
+  state_ctrl_->SetRegularState(app_moved_to_full,
+                               constants::kDefaultWindowId,
+                               FullNotAudibleState(),
+                               false);
 }
 
 TEST_F(
@@ -1862,7 +1920,10 @@ TEST_F(
   ExpectAppChangeHmiStateDueToConflictResolving(
       full_app, full_app_mock, FullNotAudibleState(), BackgroundState());
 
-  state_ctrl_->SetRegularState(app_moved_to_full, FullAudibleState(), false);
+  state_ctrl_->SetRegularState(app_moved_to_full,
+                               constants::kDefaultWindowId,
+                               FullAudibleState(),
+                               false);
 }
 
 TEST_F(
@@ -1899,7 +1960,10 @@ TEST_F(
   ExpectAppChangeHmiStateDueToConflictResolving(
       full_app, full_app_mock, FullAudibleState(), LimitedState());
 
-  state_ctrl_->SetRegularState(app_moved_to_full, FullAudibleState(), false);
+  state_ctrl_->SetRegularState(app_moved_to_full,
+                               constants::kDefaultWindowId,
+                               FullAudibleState(),
+                               false);
 }
 
 TEST_F(StateControllerImplTest,
@@ -1917,14 +1981,17 @@ TEST_F(StateControllerImplTest,
                               BackgroundState(),
                               FullAudibleState());
 
-  EXPECT_CALL(*media_app_ptr_, RegularHmiState())
+  EXPECT_CALL(*media_app_ptr_, RegularHmiState(constants::kDefaultWindowId))
       .WillOnce(Return(LimitedState()));
 
   ExpectAppChangeHmiStateDueToConflictResolving(
       navi_app_, navi_app_ptr_, LimitedState(), BackgroundState());
   ExpectAppChangeHmiStateDueToConflictResolving(
       vc_app_, vc_app_ptr_, LimitedState(), BackgroundState());
-  state_ctrl_->SetRegularState(media_navi_vc_app_, FullAudibleState(), false);
+  state_ctrl_->SetRegularState(media_navi_vc_app_,
+                               constants::kDefaultWindowId,
+                               FullAudibleState(),
+                               false);
 }
 
 TEST_F(StateControllerImplTest,
@@ -1942,14 +2009,17 @@ TEST_F(StateControllerImplTest,
                               BackgroundState(),
                               FullAudibleState());
 
-  EXPECT_CALL(*media_app_ptr_, RegularHmiState())
+  EXPECT_CALL(*media_app_ptr_, RegularHmiState(constants::kDefaultWindowId))
       .WillOnce(Return(LimitedState()));
 
   ExpectAppChangeHmiStateDueToConflictResolving(
       navi_app_, navi_app_ptr_, LimitedState(), BackgroundState());
   ExpectAppChangeHmiStateDueToConflictResolving(
       vc_app_, vc_app_ptr_, FullAudibleState(), BackgroundState());
-  state_ctrl_->SetRegularState(media_navi_vc_app_, FullAudibleState(), false);
+  state_ctrl_->SetRegularState(media_navi_vc_app_,
+                               constants::kDefaultWindowId,
+                               FullAudibleState(),
+                               false);
 }
 
 // TODO {AKozoriz} Changed logic in state_controller
@@ -2000,7 +2070,8 @@ TEST_F(StateControllerImplTest, DISABLED_ActivateAppSuccessReceivedFromHMI) {
         .WillOnce(Return(media_app_));
     ExpectSuccesfullSetHmiState(
         media_app_, media_app_ptr_, initial_hmi_state, hmi_state);
-    state_ctrl_->SetRegularState(media_app_, hmi_state, true);
+    state_ctrl_->SetRegularState(
+        media_app_, constants::kDefaultWindowId, hmi_state, true);
     smart_objects::SmartObject message;
     message[am::strings::params][am::hmi_response::code] =
         Common_Result::SUCCESS;
@@ -2056,9 +2127,13 @@ TEST_F(StateControllerImplTest, SendEventBCActivateApp_HMIReceivesError) {
     EXPECT_CALL(app_manager_mock_, application_by_hmi_app(hmi_app_id))
         .WillOnce(Return(simple_app_));
 
-    EXPECT_CALL(*simple_app_ptr_, RegularHmiState()).Times(0);
-    EXPECT_CALL(*simple_app_ptr_, CurrentHmiState()).Times(0);
-    EXPECT_CALL(*simple_app_ptr_, SetRegularState(_)).Times(0);
+    EXPECT_CALL(*simple_app_ptr_, RegularHmiState(constants::kDefaultWindowId))
+        .Times(0);
+    EXPECT_CALL(*simple_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
+        .Times(0);
+    EXPECT_CALL(*simple_app_ptr_,
+                SetRegularState(constants::kDefaultWindowId, _))
+        .Times(0);
 
     EXPECT_CALL(app_manager_mock_, SendHMIStatusNotification(simple_app_))
         .Times(0);
@@ -2084,13 +2159,15 @@ TEST_F(StateControllerImplTest, ActivateAppInvalidCorrelationId) {
       .WillOnce(Return(hmi_app_id));
   EXPECT_CALL(app_manager_mock_, application_by_hmi_app(hmi_app_id))
       .WillOnce(Return(am::ApplicationSharedPtr()));
-  EXPECT_CALL(*simple_app_ptr_, SetRegularState(_)).Times(0);
+  EXPECT_CALL(*simple_app_ptr_, SetRegularState(constants::kDefaultWindowId, _))
+      .Times(0);
   EXPECT_CALL(app_manager_mock_, SendHMIStatusNotification(simple_app_))
       .Times(0);
   EXPECT_CALL(app_manager_mock_, OnHMILevelChanged(simple_app_->app_id(), _, _))
       .Times(0);
   SetBCActivateAppRequestToHMI(Common_HMILevel::FULL, corr_id);
-  state_ctrl_->SetRegularState(simple_app_, FullNotAudibleState(), true);
+  state_ctrl_->SetRegularState(
+      simple_app_, constants::kDefaultWindowId, FullNotAudibleState(), true);
   smart_objects::SmartObject message;
   message[am::strings::params][am::hmi_response::code] = Common_Result::SUCCESS;
   message[am::strings::params][am::strings::correlation_id] = corr_id;
@@ -2516,43 +2593,47 @@ TEST_F(StateControllerImplTest, SetRegularStateWithNewHmiLvl) {
   using namespace mobile_apis;
 
   HMILevel::eType set_lvl = HMILevel::HMI_NONE;
-  EXPECT_CALL(*simple_app_ptr_, RegularHmiState())
+  EXPECT_CALL(*simple_app_ptr_, RegularHmiState(constants::kDefaultWindowId))
       .WillOnce(Return(BackgroundState()));
 
-  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState())
+  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
       .WillOnce(Return(BackgroundState()))
       .WillOnce(Return(BackgroundState()));
 
-  state_ctrl_->SetRegularState(simple_app_, set_lvl);
+  state_ctrl_->SetRegularState(
+      simple_app_, constants::kDefaultWindowId, set_lvl);
 
   set_lvl = HMILevel::HMI_LIMITED;
-  EXPECT_CALL(*simple_app_ptr_, RegularHmiState())
+  EXPECT_CALL(*simple_app_ptr_, RegularHmiState(constants::kDefaultWindowId))
       .WillOnce(Return(BackgroundState()));
 
-  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState())
+  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
       .WillOnce(Return(BackgroundState()))
       .WillOnce(Return(BackgroundState()));
-  state_ctrl_->SetRegularState(simple_app_, set_lvl);
+  state_ctrl_->SetRegularState(
+      simple_app_, constants::kDefaultWindowId, set_lvl);
 
   set_lvl = HMILevel::HMI_FULL;
-  EXPECT_CALL(*simple_app_ptr_, RegularHmiState())
+  EXPECT_CALL(*simple_app_ptr_, RegularHmiState(constants::kDefaultWindowId))
       .WillOnce(Return(BackgroundState()));
 
   const uint32_t corr_id = 314;
   SetBCActivateAppRequestToHMI(
       static_cast<hmi_apis::Common_HMILevel::eType>(set_lvl), corr_id);
 
-  state_ctrl_->SetRegularState(simple_app_, set_lvl);
+  state_ctrl_->SetRegularState(
+      simple_app_, constants::kDefaultWindowId, set_lvl);
 
   set_lvl = HMILevel::HMI_BACKGROUND;
-  EXPECT_CALL(*simple_app_ptr_, RegularHmiState())
+  EXPECT_CALL(*simple_app_ptr_, RegularHmiState(constants::kDefaultWindowId))
       .WillOnce(Return(BackgroundState()));
 
-  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState())
+  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
       .WillOnce(Return(BackgroundState()))
       .WillOnce(Return(BackgroundState()));
 
-  state_ctrl_->SetRegularState(simple_app_, set_lvl);
+  state_ctrl_->SetRegularState(
+      simple_app_, constants::kDefaultWindowId, set_lvl);
 }
 
 TEST_F(StateControllerImplTest, SetRegularStateWithAudioStateAudible) {
@@ -2562,16 +2643,18 @@ TEST_F(StateControllerImplTest, SetRegularStateWithAudioStateAudible) {
                                            AudioStreamingState::AUDIBLE,
                                            VideoStreamingState::STREAMABLE,
                                            SystemContext::SYSCTXT_MAIN);
-  EXPECT_CALL(*simple_app_ptr_, RegularHmiState())
+  EXPECT_CALL(*simple_app_ptr_, RegularHmiState(constants::kDefaultWindowId))
       .WillRepeatedly(Return(BackgroundState()));
 
-  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState())
+  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
       .WillOnce(Return(check_state))
       .WillOnce(Return(check_state));
   EXPECT_CALL(*simple_app_ptr_,
-              SetRegularState(Truly(HmiStatesComparator(check_state))));
+              SetRegularState(constants::kDefaultWindowId,
+                              Truly(HmiStatesComparator(check_state))));
 
   state_ctrl_->SetRegularState(simple_app_,
+                               constants::kDefaultWindowId,
                                AudioStreamingState::AUDIBLE,
                                VideoStreamingState::STREAMABLE);
 }
@@ -2588,23 +2671,31 @@ TEST_F(StateControllerImplTest,
 
   // Non-media app can't have LIMITED-AUDIO state
   EXPECT_CALL(*simple_app_ptr_, is_resuming()).WillRepeatedly(Return(true));
-  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState()).Times(0);
-  EXPECT_CALL(*simple_app_ptr_, SetRegularState(_)).Times(0);
+  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
+      .Times(0);
+  EXPECT_CALL(*simple_app_ptr_, SetRegularState(constants::kDefaultWindowId, _))
+      .Times(0);
   EXPECT_CALL(app_manager_mock_, GetDefaultHmiLevel(_))
       .WillRepeatedly(Return(mobile_apis::HMILevel::HMI_NONE));
   EXPECT_CALL(app_manager_mock_, active_application())
       .WillRepeatedly(Return(am::ApplicationSharedPtr()));
   EXPECT_CALL(*simple_app_ptr_,
-              SetPostponedState(Truly(HmiStatesComparator(check_state))));
-  state_ctrl_->SetRegularState(simple_app_, check_state, false);
+              SetPostponedState(constants::kDefaultWindowId,
+                                Truly(HmiStatesComparator(check_state))));
+  state_ctrl_->SetRegularState(
+      simple_app_, constants::kDefaultWindowId, check_state, false);
 
   check_state = LimitedState();
   EXPECT_CALL(*media_app_ptr_, is_resuming()).WillRepeatedly(Return(true));
-  EXPECT_CALL(*media_app_ptr_, CurrentHmiState()).Times(0);
-  EXPECT_CALL(*media_app_ptr_, SetRegularState(_)).Times(0);
+  EXPECT_CALL(*media_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
+      .Times(0);
+  EXPECT_CALL(*media_app_ptr_, SetRegularState(constants::kDefaultWindowId, _))
+      .Times(0);
   EXPECT_CALL(*media_app_ptr_,
-              SetPostponedState(Truly(HmiStatesComparator(check_state))));
-  state_ctrl_->SetRegularState(media_app_, check_state, false);
+              SetPostponedState(constants::kDefaultWindowId,
+                                Truly(HmiStatesComparator(check_state))));
+  state_ctrl_->SetRegularState(
+      media_app_, constants::kDefaultWindowId, check_state, false);
 }
 
 TEST_F(StateControllerImplTest, SetRegularStateMediaToNonMediaApp_VR_Stopped) {
@@ -2621,7 +2712,7 @@ TEST_F(StateControllerImplTest, SetRegularStateMediaToNonMediaApp_VR_Stopped) {
   HmiStatePtr check_state = FullNotAudibleState();
 
   // Non-media app can't have LIMITED-AUDIO state
-  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState())
+  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
       .WillOnce(Return(check_state))
       .WillOnce(Return(check_state));
 
@@ -2631,16 +2722,19 @@ TEST_F(StateControllerImplTest, SetRegularStateMediaToNonMediaApp_VR_Stopped) {
               SendOnResumeAudioSourceToHMI(simple_app_id_, _))
       .Times(0);
   EXPECT_CALL(*simple_app_ptr_,
-              SetPostponedState(Truly(HmiStatesComparator(check_state))))
+              SetPostponedState(constants::kDefaultWindowId,
+                                Truly(HmiStatesComparator(check_state))))
       .Times(0);
   EXPECT_CALL(*simple_app_ptr_,
-              SetRegularState(Truly(HmiStatesComparator(check_state))));
-  state_ctrl_->SetRegularState(simple_app_, check_state, false);
+              SetRegularState(constants::kDefaultWindowId,
+                              Truly(HmiStatesComparator(check_state))));
+  state_ctrl_->SetRegularState(
+      simple_app_, constants::kDefaultWindowId, check_state, false);
 
   // Set state of media app after vr has stopped
   check_state = LimitedState();
 
-  EXPECT_CALL(*media_app_ptr_, CurrentHmiState())
+  EXPECT_CALL(*media_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
       .WillOnce(Return(check_state))
       .WillOnce(Return(check_state));
 
@@ -2649,11 +2743,14 @@ TEST_F(StateControllerImplTest, SetRegularStateMediaToNonMediaApp_VR_Stopped) {
   EXPECT_CALL(message_helper_mock_,
               SendOnResumeAudioSourceToHMI(media_app_id_, _));
   EXPECT_CALL(*media_app_ptr_,
-              SetPostponedState(Truly(HmiStatesComparator(check_state))))
+              SetPostponedState(constants::kDefaultWindowId,
+                                Truly(HmiStatesComparator(check_state))))
       .Times(0);
   EXPECT_CALL(*media_app_ptr_,
-              SetRegularState(Truly(HmiStatesComparator(check_state))));
-  state_ctrl_->SetRegularState(media_app_, check_state, false);
+              SetRegularState(constants::kDefaultWindowId,
+                              Truly(HmiStatesComparator(check_state))));
+  state_ctrl_->SetRegularState(
+      media_app_, constants::kDefaultWindowId, check_state, false);
 }
 
 TEST_F(StateControllerImplTest,
@@ -2676,28 +2773,38 @@ TEST_F(StateControllerImplTest,
   HmiStatePtr check_state = FullNotAudibleState();
   EXPECT_CALL(*simple_app_ptr_, is_resuming()).WillRepeatedly(Return(true));
 
-  EXPECT_CALL(*simple_app_ptr_, RegularHmiState()).Times(0);
-  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState()).Times(0);
-  EXPECT_CALL(*simple_app_ptr_, SetRegularState(_)).Times(0);
+  EXPECT_CALL(*simple_app_ptr_, RegularHmiState(constants::kDefaultWindowId))
+      .Times(0);
+  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
+      .Times(0);
+  EXPECT_CALL(*simple_app_ptr_, SetRegularState(constants::kDefaultWindowId, _))
+      .Times(0);
   EXPECT_CALL(app_manager_mock_, GetDefaultHmiLevel(_))
       .WillRepeatedly(Return(mobile_apis::HMILevel::HMI_NONE));
   EXPECT_CALL(app_manager_mock_, active_application())
       .WillRepeatedly(Return(am::ApplicationSharedPtr()));
   EXPECT_CALL(*simple_app_ptr_,
-              SetPostponedState(Truly(HmiStatesComparator(check_state))));
-  state_ctrl_->SetRegularState(simple_app_, check_state, false);
+              SetPostponedState(constants::kDefaultWindowId,
+                                Truly(HmiStatesComparator(check_state))));
+  state_ctrl_->SetRegularState(
+      simple_app_, constants::kDefaultWindowId, check_state, false);
 
   // Set media app
   check_state = LimitedState();
   EXPECT_CALL(*media_app_ptr_, is_resuming()).WillRepeatedly(Return(true));
 
-  EXPECT_CALL(*media_app_ptr_, RegularHmiState()).Times(0);
-  EXPECT_CALL(*media_app_ptr_, CurrentHmiState()).Times(0);
-  EXPECT_CALL(*media_app_ptr_, SetRegularState(_)).Times(0);
+  EXPECT_CALL(*media_app_ptr_, RegularHmiState(constants::kDefaultWindowId))
+      .Times(0);
+  EXPECT_CALL(*media_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
+      .Times(0);
+  EXPECT_CALL(*media_app_ptr_, SetRegularState(constants::kDefaultWindowId, _))
+      .Times(0);
 
   EXPECT_CALL(*media_app_ptr_,
-              SetPostponedState(Truly(HmiStatesComparator(check_state))));
-  state_ctrl_->SetRegularState(media_app_, check_state, false);
+              SetPostponedState(constants::kDefaultWindowId,
+                                Truly(HmiStatesComparator(check_state))));
+  state_ctrl_->SetRegularState(
+      media_app_, constants::kDefaultWindowId, check_state, false);
 }
 
 TEST_F(StateControllerImplTest,
@@ -2730,8 +2837,10 @@ TEST_F(StateControllerImplTest,
       .WillRepeatedly(Return(am::ApplicationSharedPtr()));
 
   EXPECT_CALL(*media_app_ptr_,
-              SetPostponedState(Truly(HmiStatesComparator(check_state))));
-  state_ctrl_->SetRegularState(media_app_, check_state, false);
+              SetPostponedState(constants::kDefaultWindowId,
+                                Truly(HmiStatesComparator(check_state))));
+  state_ctrl_->SetRegularState(
+      media_app_, constants::kDefaultWindowId, check_state, false);
 }
 
 TEST_F(StateControllerImplTest,
@@ -2759,13 +2868,14 @@ TEST_F(StateControllerImplTest,
   EXPECT_CALL(app_manager_mock_, IsAppTypeExistsInFullOrLimited(_))
       .WillRepeatedly(Return(false));
 
-  EXPECT_CALL(*navi_app_ptr_, CurrentHmiState())
+  EXPECT_CALL(*navi_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
       .WillRepeatedly(Return(hmi_state));
 
   EXPECT_CALL(app_manager_mock_, active_application())
       .WillRepeatedly(Return(am::ApplicationSharedPtr()));
 
-  state_ctrl_->SetRegularState(navi_app_, hmi_state, false);
+  state_ctrl_->SetRegularState(
+      navi_app_, constants::kDefaultWindowId, hmi_state, false);
 }
 
 TEST_F(StateControllerImplTest,
@@ -2793,15 +2903,17 @@ TEST_F(StateControllerImplTest,
   EXPECT_CALL(app_manager_mock_, IsAppTypeExistsInFullOrLimited(_))
       .WillRepeatedly(Return(false));
 
-  EXPECT_CALL(*navi_app_ptr_, CurrentHmiState())
+  EXPECT_CALL(*navi_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
       .WillRepeatedly(Return(hmi_state));
 
   EXPECT_CALL(app_manager_mock_, active_application())
       .WillRepeatedly(Return(am::ApplicationSharedPtr()));
 
-  EXPECT_CALL(*navi_app_ptr_, SetPostponedState(_)).Times(0);
+  EXPECT_CALL(*navi_app_ptr_, SetPostponedState(constants::kDefaultWindowId, _))
+      .Times(0);
 
-  state_ctrl_->SetRegularState(navi_app_, hmi_state, false);
+  state_ctrl_->SetRegularState(
+      navi_app_, constants::kDefaultWindowId, hmi_state, false);
 }
 
 TEST_F(StateControllerImplTest,
@@ -2833,13 +2945,14 @@ TEST_F(StateControllerImplTest,
   EXPECT_CALL(app_manager_mock_, IsAppTypeExistsInFullOrLimited(_))
       .WillRepeatedly(Return(false));
 
-  EXPECT_CALL(*navi_app_ptr_, CurrentHmiState())
+  EXPECT_CALL(*navi_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
       .WillRepeatedly(Return(hmi_state));
 
   EXPECT_CALL(app_manager_mock_, active_application())
       .WillRepeatedly(Return(am::ApplicationSharedPtr()));
 
-  state_ctrl_->SetRegularState(navi_app_, hmi_state, true);
+  state_ctrl_->SetRegularState(
+      navi_app_, constants::kDefaultWindowId, hmi_state, true);
 }
 
 TEST_F(StateControllerImplTest,
@@ -2871,15 +2984,17 @@ TEST_F(StateControllerImplTest,
   EXPECT_CALL(app_manager_mock_, IsAppTypeExistsInFullOrLimited(_))
       .WillRepeatedly(Return(false));
 
-  EXPECT_CALL(*navi_app_ptr_, CurrentHmiState())
+  EXPECT_CALL(*navi_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
       .WillRepeatedly(Return(hmi_state));
 
   EXPECT_CALL(app_manager_mock_, active_application())
       .WillRepeatedly(Return(am::ApplicationSharedPtr()));
 
-  EXPECT_CALL(*navi_app_ptr_, SetPostponedState(_)).Times(0);
+  EXPECT_CALL(*navi_app_ptr_, SetPostponedState(constants::kDefaultWindowId, _))
+      .Times(0);
 
-  state_ctrl_->SetRegularState(navi_app_, hmi_state, true);
+  state_ctrl_->SetRegularState(
+      navi_app_, constants::kDefaultWindowId, hmi_state, true);
 }
 
 TEST_F(StateControllerImplTest,
@@ -2900,13 +3015,13 @@ TEST_F(StateControllerImplTest,
   EXPECT_CALL(*simple_app_ptr_, keep_context()).WillOnce(Return(true));
   EXPECT_CALL(*simple_app_ptr_, IsAudioApplication())
       .WillRepeatedly(Return(true));
-  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState())
+  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
       .WillOnce(Return(FullAudibleState()));
   EXPECT_CALL(*simple_app_ptr_, set_keep_context(false));
 
   HmiStatePtr new_state;
-  EXPECT_CALL(*simple_app_ptr_, AddHMIState(_))
-      .WillOnce(SaveArg<0>(&new_state));
+  EXPECT_CALL(*simple_app_ptr_, AddHMIState(constants::kDefaultWindowId, _))
+      .WillOnce(SaveArg<1>(&new_state));
 
   state_ctrl_->on_event(event);
 
@@ -2931,12 +3046,12 @@ TEST_F(StateControllerImplTest, OnEventChangedAudioSourceAppToBackground) {
 
   EXPECT_CALL(*simple_app_ptr_, IsAudioApplication())
       .WillRepeatedly(Return(true));
-  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState())
+  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
       .WillOnce(Return(LimitedState()));
 
   HmiStatePtr new_state;
-  EXPECT_CALL(*simple_app_ptr_, AddHMIState(_))
-      .WillOnce(SaveArg<0>(&new_state));
+  EXPECT_CALL(*simple_app_ptr_, AddHMIState(constants::kDefaultWindowId, _))
+      .WillOnce(SaveArg<1>(&new_state));
 
   state_ctrl_->on_event(event);
 
@@ -2955,9 +3070,10 @@ TEST_F(StateControllerImplTest, OnEventOnAppDeactivatedIncorrectHmiLevel) {
   event.set_smart_object(msg);
   EXPECT_CALL(app_manager_mock_, application(app_id))
       .WillOnce(Return(simple_app_));
-  EXPECT_CALL(*simple_app_ptr_, hmi_level())
+  EXPECT_CALL(*simple_app_ptr_, hmi_level(constants::kDefaultWindowId))
       .WillOnce(Return(mobile_apis::HMILevel::HMI_BACKGROUND));
-  EXPECT_CALL(*simple_app_ptr_, RegularHmiState()).Times(0);
+  EXPECT_CALL(*simple_app_ptr_, RegularHmiState(constants::kDefaultWindowId))
+      .Times(0);
   state_ctrl_->on_event(event);
 }
 
@@ -2971,7 +3087,8 @@ TEST_F(StateControllerImplTest, OnEventOnAppDeactivatedIncorrectApp) {
   const am::ApplicationSharedPtr incorrect_app;
   EXPECT_CALL(app_manager_mock_, application(_))
       .WillOnce(Return(incorrect_app));
-  EXPECT_CALL(*simple_app_ptr_, hmi_level()).Times(0);
+  EXPECT_CALL(*simple_app_ptr_, hmi_level(constants::kDefaultWindowId))
+      .Times(0);
   state_ctrl_->on_event(event);
 }
 
@@ -2992,13 +3109,14 @@ TEST_F(StateControllerImplTest, OnEventOnAppDeactivatedAudioApplication) {
   EXPECT_CALL(app_manager_mock_, application(app_id))
       .WillOnce(Return(simple_app_));
   EXPECT_CALL(*simple_app_ptr_, app_id()).WillRepeatedly(Return(app_id));
-  EXPECT_CALL(*simple_app_ptr_, hmi_level())
+  EXPECT_CALL(*simple_app_ptr_, hmi_level(constants::kDefaultWindowId))
       .WillRepeatedly(Return(mobile_apis::HMILevel::HMI_FULL));
   // DeactivateApp
-  EXPECT_CALL(*simple_app_ptr_, RegularHmiState()).WillOnce(Return(state));
+  EXPECT_CALL(*simple_app_ptr_, RegularHmiState(constants::kDefaultWindowId))
+      .WillOnce(Return(state));
   EXPECT_CALL(*simple_app_ptr_, IsAudioApplication())
       .WillRepeatedly(Return(true));
-  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState())
+  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
       .WillOnce(Return(BackgroundState()))
       .WillOnce(Return(BackgroundState()));
   state_ctrl_->on_event(event);
@@ -3021,14 +3139,15 @@ TEST_F(StateControllerImplTest, OnEventOnAppDeactivatedNotAudioApplication) {
   EXPECT_CALL(app_manager_mock_, application(app_id))
       .WillOnce(Return(simple_app_));
   EXPECT_CALL(*simple_app_ptr_, app_id()).WillRepeatedly(Return(app_id));
-  EXPECT_CALL(*simple_app_ptr_, hmi_level())
+  EXPECT_CALL(*simple_app_ptr_, hmi_level(constants::kDefaultWindowId))
       .WillRepeatedly(Return(mobile_apis::HMILevel::HMI_FULL));
   // DeactivateApp
-  EXPECT_CALL(*simple_app_ptr_, RegularHmiState()).WillOnce(Return(state));
+  EXPECT_CALL(*simple_app_ptr_, RegularHmiState(constants::kDefaultWindowId))
+      .WillOnce(Return(state));
   EXPECT_CALL(*simple_app_ptr_, IsAudioApplication())
       .WillRepeatedly(Return(false));
 
-  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState())
+  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
       .WillOnce(Return(BackgroundState()))
       .WillOnce(Return(BackgroundState()));
   state_ctrl_->on_event(event);
@@ -3149,9 +3268,10 @@ TEST_F(StateControllerImplTest, OnApplicationRegisteredDifferentStates) {
       simple_app_);
 
   EXPECT_CALL(*simple_app_ptr_, app_id()).WillRepeatedly(Return(app_id));
-  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState())
+  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
       .WillRepeatedly(Return(old_state));
-  EXPECT_CALL(*simple_app_ptr_, AddHMIState(_)).Times(4);
+  EXPECT_CALL(*simple_app_ptr_, AddHMIState(constants::kDefaultWindowId, _))
+      .Times(4);
 
   const am::HmiStatePtr default_state =
       CreateHmiStateByHmiStateType<am::HmiState>(
@@ -3161,8 +3281,9 @@ TEST_F(StateControllerImplTest, OnApplicationRegisteredDifferentStates) {
           mobile_apis::SystemContext::SYSCTXT_MAIN,
           simple_app_);
 
-  EXPECT_CALL(*simple_app_ptr_, RegularHmiState()).WillOnce(Return(old_state));
-  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState())
+  EXPECT_CALL(*simple_app_ptr_, RegularHmiState(constants::kDefaultWindowId))
+      .WillOnce(Return(old_state));
+  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
       .WillRepeatedly(Return(default_state));
 
   EXPECT_CALL(*simple_app_ptr_, ResetDataInNone()).Times(0);
@@ -3200,9 +3321,10 @@ TEST_F(StateControllerImplTest, OnApplicationRegisteredEqualStates) {
       simple_app_);
 
   EXPECT_CALL(*simple_app_ptr_, app_id()).WillRepeatedly(Return(app_id));
-  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState())
+  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
       .WillRepeatedly(Return(old_state));
-  EXPECT_CALL(*simple_app_ptr_, AddHMIState(_)).Times(2);
+  EXPECT_CALL(*simple_app_ptr_, AddHMIState(constants::kDefaultWindowId, _))
+      .Times(2);
 
   const am::HmiStatePtr default_state =
       CreateHmiStateByHmiStateType<am::HmiState>(
@@ -3211,9 +3333,9 @@ TEST_F(StateControllerImplTest, OnApplicationRegisteredEqualStates) {
           mobile_apis::VideoStreamingState::NOT_STREAMABLE,
           mobile_apis::SystemContext::SYSCTXT_MAIN,
           simple_app_);
-  EXPECT_CALL(*simple_app_ptr_, RegularHmiState())
+  EXPECT_CALL(*simple_app_ptr_, RegularHmiState(constants::kDefaultWindowId))
       .WillOnce(Return(default_state));
-  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState())
+  EXPECT_CALL(*simple_app_ptr_, CurrentHmiState(constants::kDefaultWindowId))
       .WillRepeatedly(Return(default_state));
 
   EXPECT_CALL(*simple_app_ptr_, ResetDataInNone()).Times(0);

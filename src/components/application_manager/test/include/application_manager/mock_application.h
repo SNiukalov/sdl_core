@@ -97,11 +97,15 @@ class MockApplication : public ::application_manager::Application {
   MOCK_METHOD1(set_folder_name, void(const std::string& folder_name));
   MOCK_CONST_METHOD0(folder_name, const std::string());
   MOCK_CONST_METHOD0(is_media_application, bool());
-  MOCK_CONST_METHOD0(hmi_level, const mobile_apis::HMILevel::eType());
+  MOCK_CONST_METHOD1(hmi_level,
+                     const mobile_apis::HMILevel::eType(
+                         const application_manager::WindowID window_id));
   MOCK_CONST_METHOD0(put_file_in_none_count, const uint32_t());
   MOCK_CONST_METHOD0(delete_file_in_none_count, const uint32_t());
   MOCK_CONST_METHOD0(list_files_in_none_count, const uint32_t());
-  MOCK_CONST_METHOD0(system_context, const mobile_apis::SystemContext::eType());
+  MOCK_CONST_METHOD1(system_context,
+                     const mobile_apis::SystemContext::eType(
+                         const application_manager::WindowID window_id));
   MOCK_CONST_METHOD0(audio_streaming_state,
                      const mobile_apis::AudioStreamingState::eType());
   MOCK_CONST_METHOD0(video_streaming_state,
@@ -109,11 +113,17 @@ class MockApplication : public ::application_manager::Application {
   MOCK_CONST_METHOD0(app_icon_path, const std::string&());
   MOCK_CONST_METHOD0(device, connection_handler::DeviceHandle());
   MOCK_CONST_METHOD0(secondary_device, connection_handler::DeviceHandle());
-  MOCK_CONST_METHOD0(CurrentHmiState, const application_manager::HmiStatePtr());
-  MOCK_CONST_METHOD0(RegularHmiState, const application_manager::HmiStatePtr());
+  MOCK_CONST_METHOD1(CurrentHmiState,
+                     const application_manager::HmiStatePtr(
+                         const application_manager::WindowID window_id));
+  MOCK_CONST_METHOD1(RegularHmiState,
+                     const application_manager::HmiStatePtr(
+                         const application_manager::WindowID window_id));
+  MOCK_CONST_METHOD0(GetWindowIds, application_manager::WindowIds());
   MOCK_CONST_METHOD0(IsAllowedToChangeAudioSource, bool());
-  MOCK_CONST_METHOD0(PostponedHmiState,
-                     const application_manager::HmiStatePtr());
+  MOCK_CONST_METHOD1(PostponedHmiState,
+                     const application_manager::HmiStatePtr(
+                         const application_manager::WindowID window_id));
   MOCK_METHOD1(set_tts_properties_in_none, void(bool active));
   MOCK_METHOD0(tts_properties_in_none, bool());
   MOCK_METHOD1(set_tts_properties_in_full, void(bool active));
@@ -167,14 +177,23 @@ class MockApplication : public ::application_manager::Application {
                ::application_manager::HelpPromptManager&());
   MOCK_CONST_METHOD0(help_prompt_manager,
                      const ::application_manager::HelpPromptManager&());
-  MOCK_METHOD1(SetInitialState, void(::application_manager::HmiStatePtr state));
-  MOCK_METHOD1(SetRegularState, void(::application_manager::HmiStatePtr state));
-  MOCK_METHOD1(SetPostponedState,
-               void(::application_manager::HmiStatePtr state));
-  MOCK_METHOD0(RemovePostponedState, void());
-  MOCK_METHOD1(AddHMIState, void(::application_manager::HmiStatePtr state));
-  MOCK_METHOD1(RemoveHMIState,
-               void(::application_manager::HmiState::StateID state_id));
+  MOCK_METHOD2(SetInitialState,
+               void(const application_manager::WindowID window_id,
+                    application_manager::HmiStatePtr state));
+  MOCK_METHOD2(SetRegularState,
+               void(const application_manager::WindowID window_id,
+                    application_manager::HmiStatePtr state));
+  MOCK_METHOD2(SetPostponedState,
+               void(const application_manager::WindowID window_id,
+                    ::application_manager::HmiStatePtr state));
+  MOCK_METHOD1(RemovePostponedState,
+               void(const application_manager::WindowID window_id));
+  MOCK_METHOD2(AddHMIState,
+               void(const application_manager::WindowID window_id,
+                    application_manager::HmiStatePtr state));
+  MOCK_METHOD2(RemoveHMIState,
+               void(const application_manager::WindowID window_id,
+                    ::application_manager::HmiState::StateID state_id));
   MOCK_METHOD2(SubscribeToSoftButtons,
                void(int32_t cmd_id,
                     const ::application_manager::SoftButtonID& softbuttons_id));
@@ -316,9 +335,10 @@ class MockApplication : public ::application_manager::Application {
       SwapMobileMessageQueue,
       void(::application_manager::MobileMessageQueue& mobile_messages));
 
-  MOCK_METHOD1(
+  MOCK_METHOD2(
       set_system_context,
-      void(const application_manager::mobile_api::SystemContext::eType&));
+      void(const application_manager::WindowID window_id,
+           const application_manager::mobile_api::SystemContext::eType&));
   MOCK_METHOD1(
       set_audio_streaming_state,
       void(const application_manager::mobile_api::AudioStreamingState::eType&
@@ -329,9 +349,10 @@ class MockApplication : public ::application_manager::Application {
                bool(smart_objects::SmartObject module));
   MOCK_METHOD1(UnsubscribeFromInteriorVehicleData,
                bool(smart_objects::SmartObject module));
-  MOCK_METHOD1(
+  MOCK_METHOD2(
       set_hmi_level,
-      void(const application_manager::mobile_api::HMILevel::eType& hmi_level));
+      void(const application_manager::WindowID window_id,
+           const application_manager::mobile_api::HMILevel::eType& hmi_level));
   MOCK_METHOD1(QueryInterface,
                application_manager::AppExtensionPtr(
                    application_manager::AppExtensionUID uid));

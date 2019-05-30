@@ -277,9 +277,10 @@ class MockApplicationManager : public application_manager::ApplicationManager {
                void(uint32_t app_id,
                     protocol_handler::ServiceType service_type,
                     bool state));
-  MOCK_CONST_METHOD5(CreateRegularState,
+  MOCK_CONST_METHOD6(CreateRegularState,
                      application_manager::HmiStatePtr(
                          application_manager::ApplicationSharedPtr app,
+                         const mobile_apis::WindowType::eType window_type,
                          mobile_apis::HMILevel::eType hmi_level,
                          mobile_apis::AudioStreamingState::eType audio_state,
                          mobile_apis::VideoStreamingState::eType video_state,
@@ -340,6 +341,14 @@ class MockApplicationManager : public application_manager::ApplicationManager {
   MOCK_CONST_METHOD0(GetCommandFactory, application_manager::CommandFactory&());
   MOCK_CONST_METHOD0(get_current_audio_source, uint32_t());
   MOCK_METHOD1(set_current_audio_source, void(const uint32_t));
+  MOCK_CONST_METHOD1(HasWindowAssociatedService,
+                     bool(const std::string& service_name));
+  MOCK_METHOD2(AssignAppWindowService,
+               void(const application_manager::AppWindowIdPair& app_window_pair,
+                    const std::string& service_name));
+  MOCK_METHOD1(
+      RemoveAppWindowServices,
+      void(const application_manager::AppWindowIdPair& app_window_pair));
 };
 
 }  // namespace application_manager_test

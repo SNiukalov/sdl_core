@@ -148,6 +148,11 @@ typedef NiceMock<
 #define NAVI true
 #define NOT_NAVI false
 
+namespace {
+const am::WindowID kDefaultWindowId =
+    mobile_apis::PredefinedWindows::DEFAULT_WINDOW;
+}
+
 ACTION_P(GetEventId, event_id) {
   *event_id = arg0.id();
 }
@@ -1090,6 +1095,7 @@ TEST_F(HMICommandsNotificationsTest,
       .WillOnce(ReturnRef(mock_state_controller_));
   EXPECT_CALL(mock_state_controller_,
               SetRegularState(app_,
+                              kDefaultWindowId,
                               mobile_apis::HMILevel::HMI_NONE,
                               mobile_apis::AudioStreamingState::NOT_AUDIBLE,
                               mobile_apis::VideoStreamingState::NOT_STREAMABLE,
@@ -1116,6 +1122,7 @@ TEST_F(HMICommandsNotificationsTest,
       .WillOnce(ReturnRef(mock_state_controller_));
   EXPECT_CALL(mock_state_controller_,
               SetRegularState(app_,
+                              kDefaultWindowId,
                               mobile_apis::HMILevel::HMI_NONE,
                               mobile_apis::AudioStreamingState::NOT_AUDIBLE,
                               mobile_apis::VideoStreamingState::NOT_STREAMABLE,
@@ -1137,7 +1144,8 @@ TEST_F(HMICommandsNotificationsTest,
   EXPECT_CALL(app_mngr_, state_controller())
       .WillOnce(ReturnRef(mock_state_controller_));
   EXPECT_CALL(mock_state_controller_,
-              SetRegularState(_, mobile_apis::HMILevel::HMI_FULL, true));
+              SetRegularState(
+                  _, kDefaultWindowId, mobile_apis::HMILevel::HMI_FULL, true));
 
   EXPECT_CALL(app_mngr_, get_settings())
       .WillOnce(ReturnRef(app_mngr_settings_));
@@ -1338,8 +1346,10 @@ TEST_F(HMICommandsNotificationsTest,
   EXPECT_CALL(*app_ptr_, language()).WillRepeatedly(ReturnRef(kLang));
   EXPECT_CALL(app_mngr_, state_controller())
       .WillOnce(ReturnRef(mock_state_controller_));
-  EXPECT_CALL(mock_state_controller_,
-              SetRegularState(app_, mobile_apis::HMILevel::HMI_NONE, false));
+  EXPECT_CALL(
+      mock_state_controller_,
+      SetRegularState(
+          app_, kDefaultWindowId, mobile_apis::HMILevel::HMI_NONE, false));
   EXPECT_CALL(mock_message_helper_,
               GetOnAppInterfaceUnregisteredNotificationToMobile(
                   kAppId_,
@@ -1416,7 +1426,8 @@ TEST_F(HMICommandsNotificationsTest,
     EXPECT_CALL(app_mngr_, active_application()).WillOnce(Return(app_));
     EXPECT_CALL(app_mngr_, state_controller())
         .WillOnce(ReturnRef(mock_state_controller_));
-    EXPECT_CALL(mock_state_controller_, SetRegularState(app_, *it));
+    EXPECT_CALL(mock_state_controller_,
+                SetRegularState(app_, kDefaultWindowId, *it));
     command->Run();
   }
 }
@@ -1465,7 +1476,8 @@ TEST_F(HMICommandsNotificationsTest,
     EXPECT_CALL(app_mngr_, application(_)).WillOnce(Return(app_));
     EXPECT_CALL(app_mngr_, state_controller())
         .WillOnce(ReturnRef(mock_state_controller_));
-    EXPECT_CALL(mock_state_controller_, SetRegularState(app_, *it));
+    EXPECT_CALL(mock_state_controller_,
+                SetRegularState(app_, kDefaultWindowId, *it));
     command->Run();
   }
 }
