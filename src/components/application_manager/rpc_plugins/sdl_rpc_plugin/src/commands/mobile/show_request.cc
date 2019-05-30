@@ -197,7 +197,8 @@ void ShowRequest::Run() {
   mobile_apis::Result::eType verification_result = mobile_apis::Result::SUCCESS;
   if (((*message_)[strings::msg_params].keyExists(strings::graphic)) &&
       ((*message_)[strings::msg_params][strings::graphic][strings::value]
-           .asString()).length()) {
+           .asString())
+          .length()) {
     verification_result = MessageHelper::VerifyImage(
         (*message_)[strings::msg_params][strings::graphic],
         app,
@@ -473,7 +474,8 @@ bool ShowRequest::CheckStringsOfShowRequest() {
 
   if ((*message_)[strings::msg_params].keyExists(strings::secondary_graphic)) {
     str = (*message_)[strings::msg_params][strings::secondary_graphic]
-                     [strings::value].asCharArray();
+                     [strings::value]
+                         .asCharArray();
     if (!CheckSyntax(str)) {
       LOG4CXX_ERROR(logger_,
                     "Invalid secondary_graphic value syntax check failed");

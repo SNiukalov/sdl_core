@@ -185,6 +185,10 @@ class ApplicationState {
    * @brief Active states of application
    */
   HmiStatesMap hmi_states_map_;
+
+  /**
+   * @brief hmi_states_map_lock_
+   */
   mutable sync_primitives::Lock hmi_states_map_lock_;
 
   DISALLOW_COPY_AND_ASSIGN(ApplicationState);

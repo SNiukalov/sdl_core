@@ -126,9 +126,8 @@ struct HMILevelPredicate
       : level_(level) {}
 
   bool operator()(const ApplicationSharedPtr app) const {
-    return level_ ==
-                   app->hmi_level(
-                       mobile_apis::PredefinedWindows::DEFAULT_WINDOW)
+    return level_ == app->hmi_level(
+                         mobile_apis::PredefinedWindows::DEFAULT_WINDOW)
                ? true
                : false;
   }
@@ -1396,9 +1395,9 @@ void PolicyHandler::OnPermissionsUpdated(const std::string& policy_app_id,
       MessageHelper::StringToHMILevel(default_hmi);
 
   if (mobile_apis::HMILevel::INVALID_ENUM == hmi_level) {
-    LOG4CXX_WARN(logger_,
-                 "Couldn't convert default hmi level " << default_hmi
-                                                       << " to enum.");
+    LOG4CXX_WARN(
+        logger_,
+        "Couldn't convert default hmi level " << default_hmi << " to enum.");
     return;
   }
   if (current_hmi_level == hmi_level) {

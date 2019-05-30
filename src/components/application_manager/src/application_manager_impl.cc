@@ -295,8 +295,7 @@ ApplicationSharedPtr ApplicationManagerImpl::active_application() const {
 }
 
 bool LimitedAppPredicate(const ApplicationSharedPtr app) {
-  return app
-             ? app->hmi_level(mobile_api::PredefinedWindows::DEFAULT_WINDOW) ==
+  return app ? app->hmi_level(mobile_api::PredefinedWindows::DEFAULT_WINDOW) ==
                    mobile_api::HMILevel::HMI_LIMITED
              : false;
 }
@@ -3077,8 +3076,9 @@ mobile_apis::Result::eType ApplicationManagerImpl::CheckPolicyPermissions(
 #ifdef ENABLE_LOG
   const std::string log_msg =
       "Application: " + app->policy_app_id() + ", RPC: " + function_id +
-      ", HMI status: " + MessageHelper::StringifiedHMILevel(app->hmi_level(
-                             mobile_api::PredefinedWindows::DEFAULT_WINDOW));
+      ", HMI status: " +
+      MessageHelper::StringifiedHMILevel(
+          app->hmi_level(mobile_api::PredefinedWindows::DEFAULT_WINDOW));
 #endif  // ENABLE_LOG
   if (result.hmi_level_permitted != policy::kRpcAllowed) {
     LOG4CXX_WARN(logger_, "Request is blocked by policies. " << log_msg);

@@ -80,16 +80,16 @@ AcquireResult::eType ResourceAllocationManagerImpl::AcquireResource(
   }
 
   if (app_id == allocated_resources_[module_type]) {
-    LOG4CXX_DEBUG(logger_,
-                  "App: " << app_id << " is already acquired resource "
-                          << module_type);
+    LOG4CXX_DEBUG(
+        logger_,
+        "App: " << app_id << " is already acquired resource " << module_type);
     return AcquireResult::ALLOWED;
   }
 
   if (IsModuleTypeRejected(module_type, app_id)) {
-    LOG4CXX_DEBUG(logger_,
-                  "Driver disallowed app: " << app_id << " to acquire "
-                                            << module_type);
+    LOG4CXX_DEBUG(
+        logger_,
+        "Driver disallowed app: " << app_id << " to acquire " << module_type);
     return AcquireResult::REJECTED;
   }
 
