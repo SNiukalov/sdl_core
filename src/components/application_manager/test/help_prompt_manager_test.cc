@@ -67,6 +67,7 @@ const uint8_t stop_streaming_timeout = 1u;
 const std::vector<std::string> kTimeoutPrompt{"timeoutPrompt"};
 const WindowID kDefaultWindowId =
     mobile_apis::PredefinedWindows::DEFAULT_WINDOW;
+const std::string kDefaultWindowName = "DefaultName";
 }  // namespace
 
 using namespace application_manager;
@@ -246,7 +247,8 @@ void HelpPromptManagerTest::CreateApplication(
                               app_mngr_,
                               mock_help_prompt_manager));
   HmiStatePtr initial_state = CreateTestHmiState();
-  app_impl_->SetInitialState(kDefaultWindowId, initial_state);
+  app_impl_->SetInitialState(
+      kDefaultWindowId, kDefaultWindowName, initial_state);
 }
 
 TEST_F(HelpPromptManagerTest, AddCommand_OnVrCommandAdded) {

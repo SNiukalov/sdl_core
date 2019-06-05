@@ -120,6 +120,7 @@ class MockApplication : public ::application_manager::Application {
                      const application_manager::HmiStatePtr(
                          const application_manager::WindowID window_id));
   MOCK_CONST_METHOD0(GetWindowIds, application_manager::WindowIds());
+  MOCK_CONST_METHOD0(GetWindowNames, application_manager::WindowNames());
   MOCK_CONST_METHOD0(IsAllowedToChangeAudioSource, bool());
   MOCK_CONST_METHOD1(PostponedHmiState,
                      const application_manager::HmiStatePtr(
@@ -177,8 +178,9 @@ class MockApplication : public ::application_manager::Application {
                ::application_manager::HelpPromptManager&());
   MOCK_CONST_METHOD0(help_prompt_manager,
                      const ::application_manager::HelpPromptManager&());
-  MOCK_METHOD2(SetInitialState,
+  MOCK_METHOD3(SetInitialState,
                void(const application_manager::WindowID window_id,
+                    const std::string& window_name,
                     application_manager::HmiStatePtr state));
   MOCK_METHOD2(SetRegularState,
                void(const application_manager::WindowID window_id,

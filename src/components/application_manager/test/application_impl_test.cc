@@ -73,8 +73,10 @@ typedef void (ApplicationImpl::*AddSet)(const WindowID window_id,
                                         HmiStatePtr args);
 
 namespace {
-const WindowID kDefaultWindowId = kDefaultWindowId;
-}
+const WindowID kDefaultWindowId =
+    mobile_apis::PredefinedWindows::DEFAULT_WINDOW;
+const std::string kDefaultWindowName = "DefaultName";
+}  // namespace
 
 class ApplicationImplTest : public ::testing::Test {
  protected:
@@ -111,7 +113,8 @@ class ApplicationImplTest : public ::testing::Test {
                             mock_application_manager_));
 
     HmiStatePtr initial_state = CreateTestHmiState();
-    app_impl->SetInitialState(kDefaultWindowId, initial_state);
+    app_impl->SetInitialState(
+        kDefaultWindowId, kDefaultWindowName, initial_state);
   }
 
   virtual void TearDown() OVERRIDE {

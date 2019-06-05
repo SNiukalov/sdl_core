@@ -53,6 +53,7 @@ namespace {
 
 const WindowID kDefaultWindowId =
     mobile_apis::PredefinedWindows::DEFAULT_WINDOW;
+const std::string kDefaultWindowName = "DefaultName";
 
 std::vector<StateID> GenerateCurrentStates() {
   std::vector<StateID> states;
@@ -261,7 +262,7 @@ TEST_F(ApplicationStateTest, InitState_GetRegularState) {
       app_mngr_,
       init_state);
 
-  app_state.InitState(kDefaultWindowId, state);
+  app_state.InitState(kDefaultWindowId, kDefaultWindowName, state);
 
   HmiStatePtr reg_state =
       app_state.GetState(kDefaultWindowId, StateID::STATE_ID_REGULAR);
@@ -281,7 +282,7 @@ TEST_F(ApplicationStateTest, AddPosponedState_DeletePosponedState) {
       init_state);
   state->set_hmi_level(mobile_apis::HMILevel::HMI_FULL);
 
-  app_state.InitState(kDefaultWindowId, state);
+  app_state.InitState(kDefaultWindowId, kDefaultWindowName, state);
 
   // Add postponed state
   state = std::make_shared<HmiState>(
@@ -309,7 +310,7 @@ TEST_F(ApplicationStateTest,
       static_cast<std::shared_ptr<Application> >(mock_app_),
       app_mngr_,
       reg_state);
-  app_state.InitState(kDefaultWindowId, state);
+  app_state.InitState(kDefaultWindowId, kDefaultWindowName, state);
 
   // Try deleting regular state
   app_state.RemoveState(kDefaultWindowId, reg_state);
