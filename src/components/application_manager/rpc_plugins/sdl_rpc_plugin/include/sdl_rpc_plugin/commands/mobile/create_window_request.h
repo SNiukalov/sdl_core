@@ -77,6 +77,7 @@ class CreateWindowRequest : public app_mngr::commands::CommandRequestImpl {
    * @return true if window_name is valid, otherwise returns false
    */
   bool CheckWindowName(app_mngr::ApplicationSharedPtr app,
+                       const app_mngr::WindowID window_id,
                        const std::string& window_name) const;
 
   /**

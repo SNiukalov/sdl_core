@@ -66,7 +66,24 @@ bool CreateWindowRequest::CheckWindowId(
 }
 
 bool CreateWindowRequest::CheckWindowName(
-    app_mngr::ApplicationSharedPtr app, const std::string& window_name) const {
+    app_mngr::ApplicationSharedPtr app,
+    const app_mngr::WindowID window_id,
+    const std::string& window_name) const {
+  if (mobile_apis::PredefinedWindows::PRIMARY_WIDGET == window_id) {
+    LOG4CXX_DEBUG(logger_,
+                  "Window name check is ignored for the primary widgets");
+    return true;
+  }
+
+  const bool names_are_equal = window_name == app->name().c_str();
+  if (names_are_equal &&
+      mobile_apis::PredefinedWindows::DEFAULT_WINDOW != window_id) {
+    LOG4CXX_ERROR(logger_,
+                  "Regular widget can't have the same name as application: "
+                      << window_name);
+    return false;
+  }
+
   const WindowNames window_names = app->GetWindowNames();
   return !helpers::in_range(window_names, window_name);
 }
@@ -121,9 +138,11 @@ void CreateWindowRequest::Run() {
 
   const std::string window_name =
       (*message_)[strings::msg_params][strings::window_name].asString();
-  if (!CheckWindowName(application, window_name)) {
+  if (!CheckWindowName(application, window_id, window_name)) {
     LOG4CXX_ERROR(logger_,
-                  "Window with name " << window_name << " is already exists");
+                  "Window name \"" << window_name
+                                   << "\" is disallowed for window #"
+                                   << window_id);
     SendResponse(false, mobile_apis::Result::DUPLICATE_NAME);
     return;
   }
