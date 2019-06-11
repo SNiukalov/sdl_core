@@ -109,6 +109,20 @@ void CreateWindowRequest::ApplyWindowInitialState(
   const std::string window_name =
       (*message_)[strings::msg_params][strings::window_name].asString();
 
+  smart_objects::SmartObject window_info(smart_objects::SmartType_Map);
+  if (message_->keyExists(strings::associated_service_type)) {
+    window_info[strings::associated_service_type] =
+        (*message_)[strings::associated_service_type];
+  }
+  if (message_->keyExists(strings::duplicate_updates_from_window_id)) {
+    window_info[strings::duplicate_updates_from_window_id] =
+        (*message_)[strings::duplicate_updates_from_window_id];
+  }
+
+  if (!window_info.empty()) {
+    app->AddWindowInfo(window_id, window_info);
+  }
+
   app->SetInitialState(window_id, window_name, initial_state);
 
   // Default HMI level for all windows except the main one is always NONE

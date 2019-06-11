@@ -80,6 +80,7 @@ void DeleteWindowRequest::DeleteWindow(
     app_mngr::ApplicationSharedPtr app) const {
   const WindowID window_id =
       (*message_)[strings::msg_params][strings::window_id].asUInt();
+  app->RemoveWindowInfo(window_id);
   app->RemoveHMIState(window_id, HmiState::StateID::STATE_ID_REGULAR);
 }
 

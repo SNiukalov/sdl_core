@@ -146,6 +146,11 @@ typedef std::map<uint32_t, smart_objects::SmartObject*> SubMenuMap;
 typedef std::map<uint32_t, smart_objects::SmartObject*> ChoiceSetMap;
 
 /*
+ * @brief Typedef for non mandatory window info map
+ */
+typedef std::map<uint32_t, smart_objects::SmartObjectSPtr> WindowInfoMap;
+
+/*
  * @brief Typedef for perform interaction choice
  * @param choice id
  * @param SmartObject choice
@@ -290,6 +295,20 @@ class DynamicApplicationData {
   virtual void RemoveChoiceSet(uint32_t choice_set_id) = 0;
 
   /*
+   * @brief Adds non-mandatory window info
+   * @param window_id unique id of a window
+   * @param window_info SmartObject that represent window info
+   */
+  virtual void AddWindowInfo(const uint32_t window_id,
+                             const smart_objects::SmartObject& window_info) = 0;
+
+  /*
+   * @brief Removes non-mandatory window info
+   * @param window_id unique id of a window
+   */
+  virtual void RemoveWindowInfo(const uint32_t window_id) = 0;
+
+  /*
    * @brief Finds choice set with the specified choice_set_id id
    *
    * @param choice_set_id Unique ID of the interaction choice set
@@ -322,6 +341,11 @@ class DynamicApplicationData {
    */
   virtual DataAccessor<PerformChoiceSetMap> performinteraction_choice_set_map()
       const = 0;
+
+  /*
+   * @brief Retrieves non-mandatory window info map
+   */
+  virtual DataAccessor<WindowInfoMap> window_info_map() const = 0;
 
   /*
    * @brief Retrieve application commands

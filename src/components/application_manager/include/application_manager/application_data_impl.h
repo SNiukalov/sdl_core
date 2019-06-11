@@ -156,6 +156,11 @@ class DynamicApplicationDataImpl : public virtual Application {
    */
   bool IsSubMenuNameAlreadyExist(const std::string& name);
 
+  void AddWindowInfo(const uint32_t window_id,
+                     const smart_objects::SmartObject& window_info);
+
+  void RemoveWindowInfo(const uint32_t window_id);
+
   /*
    * @brief Adds a interaction choice set to the application
    *
@@ -220,6 +225,8 @@ class DynamicApplicationDataImpl : public virtual Application {
    * @brief Retrieve application choice set map
    */
   inline DataAccessor<ChoiceSetMap> choice_set_map() const;
+
+  inline DataAccessor<WindowInfoMap> window_info_map() const;
 
   /*
    * @brief Sets perform interaction state
@@ -287,6 +294,8 @@ class DynamicApplicationDataImpl : public virtual Application {
   PerformChoiceSetMap performinteraction_choice_set_map_;
   mutable std::shared_ptr<sync_primitives::RecursiveLock>
       performinteraction_choice_set_lock_ptr_;
+  WindowInfoMap window_info_map_;
+  mutable std::shared_ptr<sync_primitives::Lock> window_info_map_lock_ptr_;
   uint32_t is_perform_interaction_active_;
   bool is_reset_global_properties_active_;
   int32_t perform_interaction_mode_;
@@ -309,6 +318,12 @@ DataAccessor<SubMenuMap> DynamicApplicationDataImpl::sub_menu_map() const {
 
 DataAccessor<ChoiceSetMap> DynamicApplicationDataImpl::choice_set_map() const {
   return DataAccessor<ChoiceSetMap>(choice_set_map_, choice_set_map_lock_ptr_);
+}
+
+DataAccessor<WindowInfoMap> DynamicApplicationDataImpl::window_info_map()
+    const {
+  return DataAccessor<WindowInfoMap>(window_info_map_,
+                                     window_info_map_lock_ptr_);
 }
 
 DataAccessor<PerformChoiceSetMap>
