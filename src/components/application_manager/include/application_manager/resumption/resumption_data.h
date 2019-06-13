@@ -256,6 +256,14 @@ class ResumptionData {
       app_mngr::ApplicationConstSharedPtr application) const;
 
   /**
+   * @brief Retrieves of windows info from list of available window
+   * @param application contains list of available windows
+   * @return windows info from list of available window
+   */
+  smart_objects::SmartObject GetApplicationWidgetsInfo(
+      app_mngr::ApplicationConstSharedPtr application) const;
+
+  /**
    * @brief checks pointer that it is not equal NULL
    * @param ptr - contains pointer which need to check
    * @return smartObject from pointer

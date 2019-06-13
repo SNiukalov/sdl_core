@@ -377,6 +377,8 @@ const char* delivery_mode = "deliveryMode";
 
 const char* audio_streaming_indicator = "audioStreamingIndicator";
 
+const char* windows_info = "windowsInfo";
+
 const char* const keyboard_properties_supported = "keyboardPropertiesSupported";
 const char* const language_supported = "languageSupported";
 const char* const keyboard_layout_supported = "keyboardLayoutSupported";

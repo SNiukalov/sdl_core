@@ -413,6 +413,8 @@ extern const char* delivery_mode;
 
 extern const char* audio_streaming_indicator;
 
+extern const char* windows_info;
+
 // keys for default parameters loaded from hmi_capabilities.json:
 extern const char* const keyboard_properties_default;
 extern const char* const language_default;
