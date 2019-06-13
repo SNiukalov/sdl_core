@@ -1562,6 +1562,48 @@ smart_objects::SmartObjectSPtr MessageHelper::CreateAddVRCommandToHMI(
   return vr_command;
 }
 
+smart_objects::SmartObjectList MessageHelper::CreateUICreateWindowRequestToHMI(
+    application_manager::ApplicationSharedPtr application,
+    ApplicationManager& app_mngr,
+    const smart_objects::SmartObject& windows_info) {
+  smart_objects::SmartObjectList requests;
+  DCHECK_OR_RETURN(application, requests);
+
+  for (size_t i = 0; i < windows_info.length(); ++i) {
+    const auto& info = windows_info[i];
+
+    smart_objects::SmartObjectSPtr ui_request = CreateMessageForHMI(
+        hmi_apis::messageType::request, app_mngr.GetNextHMICorrelationID());
+    DCHECK_OR_RETURN(ui_request, requests);
+
+    (*ui_request)[strings::params][strings::function_id] =
+        static_cast<int>(hmi_apis::FunctionID::UI_CreateWindow);
+
+    smart_objects::SmartObject msg_params =
+        smart_objects::SmartObject(smart_objects::SmartType_Map);
+
+    msg_params[strings::window_id] = info[strings::window_id].asUInt();
+    msg_params[strings::window_type] = info[strings::window_type].asInt();
+    msg_params[strings::window_name] = info[strings::window_name].asString();
+
+    if (info.keyExists(strings::associated_service_type)) {
+      msg_params[strings::associated_service_type] =
+          info[strings::associated_service_type].asString();
+    }
+
+    if (info.keyExists(strings::duplicate_updates_from_window_id)) {
+      msg_params[strings::duplicate_updates_from_window_id] =
+          info[strings::duplicate_updates_from_window_id].asString();
+    }
+
+    msg_params[strings::app_id] = application->hmi_app_id();
+
+    (*ui_request)[strings::msg_params] = msg_params;
+    requests.push_back(ui_request);
+  }
+  return requests;
+}
+
 bool MessageHelper::CreateDeviceInfo(
     connection_handler::DeviceHandle device_handle,
     const protocol_handler::SessionObserver& session_observer,

@@ -103,6 +103,15 @@ class ResumeCtrl {
       bool check_policy = true) = 0;
 
   /**
+   * @brief RestoreAppWidgets add widgets for the application
+   * @param application application which will be resumed
+   * @param saved_app application specific section from backup file
+   */
+  virtual bool RestoreAppWidgets(
+      application_manager::ApplicationSharedPtr application,
+      const smart_objects::SmartObject& saved_app) = 0;
+
+  /**
    * @brief Remove application from list of saved applications
    * @param application is application which need to be removed
    * @return return true, if success, otherwise return false

@@ -1,4 +1,4 @@
-/*
+﻿/*
  Copyright (c) 2016, Ford Motor Company
  All rights reserved.
 
@@ -152,9 +152,9 @@ void ResumeCtrlImpl::SaveApplication(ApplicationSharedPtr application) {
     LOG4CXX_DEBUG(logger_, "Low Voltage state is active");
     return;
   }
-  LOG4CXX_DEBUG(
-      logger_,
-      "application with appID " << application->app_id() << " will be saved");
+  LOG4CXX_DEBUG(logger_,
+                "application with appID " << application->app_id()
+                                          << " will be saved");
   resumption_storage_->SaveApplication(application);
 }
 
@@ -208,7 +208,10 @@ bool ResumeCtrlImpl::RestoreAppHMIState(ApplicationSharedPtr application) {
                 << saved_hmi_level);
       }
 
-      return SetAppHMIState(application, saved_hmi_level, true);
+      bool result = SetAppHMIState(application, saved_hmi_level, true);
+      if (result) {
+        RestoreAppWidgets(application, saved_app);
+      }
     } else {
       result = false;
       LOG4CXX_ERROR(logger_, "saved app data corrupted");
@@ -297,6 +300,23 @@ bool ResumeCtrlImpl::SetAppHMIState(
   LOG4CXX_INFO(logger_,
                "Application with policy id " << application->policy_app_id()
                                              << " got HMI level " << hmi_level);
+  return true;
+}
+
+bool ResumeCtrlImpl::RestoreAppWidgets(
+    application_manager::ApplicationSharedPtr application,
+    const smart_objects::SmartObject& saved_app) {
+  using namespace mobile_apis;
+  LOG4CXX_AUTO_TRACE(logger_);
+  DCHECK_OR_RETURN(application, false);
+  if (saved_app.keyExists(strings::windows_info)) {
+    const auto& windows_info = saved_app[strings::windows_info];
+    ProcessHMIRequests(MessageHelper::CreateUICreateWindowRequestToHMI(
+        application, application_manager_, windows_info));
+  } else {
+    LOG4CXX_ERROR(logger_, "windows_info section does not exists");
+    return false;
+  }
   return true;
 }
 
@@ -515,9 +535,9 @@ void ResumeCtrlImpl::StartAppHmiStateResumption(
     }
     RemoveApplicationFromSaved(application);
   } else {
-    LOG4CXX_INFO(
-        logger_,
-        "Do not need to resume application " << application->policy_app_id());
+    LOG4CXX_INFO(logger_,
+                 "Do not need to resume application "
+                     << application->policy_app_id());
   }
 }
 
@@ -1035,9 +1055,8 @@ void ResumeCtrlImpl::AddToResumptionTimerQueue(const uint32_t app_id) {
   }
   queue_lock_.Release();
   LOG4CXX_DEBUG(logger_,
-                "Application ID " << app_id
-                                  << " have been added"
-                                     " to resumption queue.");
+                "Application ID " << app_id << " have been added"
+                                               " to resumption queue.");
   if (run_resumption) {
     LOG4CXX_DEBUG(logger_,
                   "Application ID " << app_id << " will be restored by timer");
