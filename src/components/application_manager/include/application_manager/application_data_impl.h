@@ -226,7 +226,8 @@ class DynamicApplicationDataImpl : public virtual Application {
    */
   inline DataAccessor<ChoiceSetMap> choice_set_map() const;
 
-  inline DataAccessor<WindowInfoMap> window_info_map() const;
+  inline DataAccessor<WindowOptionalParamsMap> window_optional_params_map()
+      const;
 
   /*
    * @brief Sets perform interaction state
@@ -294,8 +295,9 @@ class DynamicApplicationDataImpl : public virtual Application {
   PerformChoiceSetMap performinteraction_choice_set_map_;
   mutable std::shared_ptr<sync_primitives::RecursiveLock>
       performinteraction_choice_set_lock_ptr_;
-  WindowInfoMap window_info_map_;
-  mutable std::shared_ptr<sync_primitives::Lock> window_info_map_lock_ptr_;
+  WindowOptionalParamsMap window_optional_params_map_;
+  mutable std::shared_ptr<sync_primitives::Lock>
+      window_optional_params_map_lock_ptr_;
   uint32_t is_perform_interaction_active_;
   bool is_reset_global_properties_active_;
   int32_t perform_interaction_mode_;
@@ -320,10 +322,10 @@ DataAccessor<ChoiceSetMap> DynamicApplicationDataImpl::choice_set_map() const {
   return DataAccessor<ChoiceSetMap>(choice_set_map_, choice_set_map_lock_ptr_);
 }
 
-DataAccessor<WindowInfoMap> DynamicApplicationDataImpl::window_info_map()
-    const {
-  return DataAccessor<WindowInfoMap>(window_info_map_,
-                                     window_info_map_lock_ptr_);
+DataAccessor<WindowOptionalParamsMap>
+DynamicApplicationDataImpl::window_optional_params_map() const {
+  return DataAccessor<WindowOptionalParamsMap>(
+      window_optional_params_map_, window_optional_params_map_lock_ptr_);
 }
 
 DataAccessor<PerformChoiceSetMap>

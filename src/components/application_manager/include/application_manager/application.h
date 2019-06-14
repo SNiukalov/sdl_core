@@ -146,9 +146,11 @@ typedef std::map<uint32_t, smart_objects::SmartObject*> SubMenuMap;
 typedef std::map<uint32_t, smart_objects::SmartObject*> ChoiceSetMap;
 
 /*
- * @brief Typedef for non mandatory window info map
+ * @brief Typedef for map of window ids to data used as non mandatory parameters
+ * to CreateWindow request.
  */
-typedef std::map<uint32_t, smart_objects::SmartObjectSPtr> WindowInfoMap;
+typedef std::map<uint32_t, smart_objects::SmartObjectSPtr>
+    WindowOptionalParamsMap;
 
 /*
  * @brief Typedef for perform interaction choice
@@ -345,7 +347,8 @@ class DynamicApplicationData {
   /*
    * @brief Retrieves non-mandatory window info map
    */
-  virtual DataAccessor<WindowInfoMap> window_info_map() const = 0;
+  virtual DataAccessor<WindowOptionalParamsMap> window_optional_params_map()
+      const = 0;
 
   /*
    * @brief Retrieve application commands

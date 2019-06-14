@@ -195,8 +195,8 @@ DynamicApplicationDataImpl::DynamicApplicationDataImpl()
     , performinteraction_choice_set_map_()
     , performinteraction_choice_set_lock_ptr_(
           std::make_shared<sync_primitives::RecursiveLock>())
-    , window_info_map_()
-    , window_info_map_lock_ptr_(std::make_shared<sync_primitives::Lock>())
+    , window_optional_params_map_()
+    , window_optional_params_map_lock_ptr_(std::make_shared<sync_primitives::Lock>())
     , is_perform_interaction_active_(false)
     , is_reset_global_properties_active_(false)
     , perform_interaction_mode_(-1) {}
@@ -268,7 +268,7 @@ DynamicApplicationDataImpl::~DynamicApplicationDataImpl() {
   }
   performinteraction_choice_set_map_.clear();
 
-  window_info_map_.clear();
+  window_optional_params_map_.clear();
 }
 
 const smart_objects::SmartObject* DynamicApplicationDataImpl::help_prompt()
@@ -562,18 +562,18 @@ bool DynamicApplicationDataImpl::IsSubMenuNameAlreadyExist(
 void DynamicApplicationDataImpl::AddWindowInfo(
     const uint32_t window_id, const smart_objects::SmartObject& window_info) {
   LOG4CXX_AUTO_TRACE(logger_);
-  const auto it = window_info_map_.find(window_id);
-  if (window_info_map_.end() == it) {
-    window_info_map_[window_id] =
+  const auto it = window_optional_params_map_.find(window_id);
+  if (window_optional_params_map_.end() == it) {
+    window_optional_params_map_[window_id] =
         std::make_shared<smart_objects::SmartObject>(window_info);
   }
 }
 
 void DynamicApplicationDataImpl::RemoveWindowInfo(const uint32_t window_id) {
   LOG4CXX_AUTO_TRACE(logger_);
-  auto it = window_info_map_.find(window_id);
-  if (window_info_map_.end() != it) {
-    window_info_map_.erase(window_id);
+  auto it = window_optional_params_map_.find(window_id);
+  if (window_optional_params_map_.end() != it) {
+    window_optional_params_map_.erase(window_id);
   }
 }
 
