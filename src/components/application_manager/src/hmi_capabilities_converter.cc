@@ -45,17 +45,6 @@ bool HMICapabilitiesConverter::ConvertDisplayCapability(
     smart_objects::SmartObject& out_display_capability) {
   LOG4CXX_AUTO_TRACE(logger_);
 
-  if (!out_display_capability.keyExists(strings::display_type)) {
-    LOG4CXX_ERROR(logger_, "displayType does not exist");
-    return false;
-  }
-
-  if (!ConvertSmartTypeStringToEnumValue<hmi_apis::Common_DisplayType::eType>(
-          out_display_capability[strings::display_type])) {
-    LOG4CXX_ERROR(logger_, "DisplayType conversion is failed");
-    return false;
-  }
-
   if (!ArrayConvertPattern(out_display_capability,
                            strings::window_type_supported,
                            &ConvertWindowTypeCapabilities)) {

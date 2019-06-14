@@ -1045,9 +1045,16 @@ void StateControllerImpl::OnAppActivated(
     return;
   }
 
-  const bool should_send_activate_app =
-      mobile_apis::PredefinedWindows::DEFAULT_WINDOW == window_id;
-  SetRegularState(app, window_id, HMILevel::HMI_FULL, should_send_activate_app);
+  if (PredefinedWindows::DEFAULT_WINDOW != window_id) {
+    const auto window_hmi_level = app->hmi_level(window_id);
+    const HMILevel::eType new_hmi_level = HMILevel::HMI_NONE == window_hmi_level
+                                              ? HMILevel::HMI_BACKGROUND
+                                              : HMILevel::HMI_FULL;
+    SetRegularState(app, window_id, new_hmi_level, false);
+    return;
+  }
+
+  SetRegularState(app, window_id, HMILevel::HMI_FULL, true);
 }
 
 void StateControllerImpl::OnAppDeactivated(
@@ -1075,7 +1082,16 @@ void StateControllerImpl::OnAppDeactivated(
     return;
   }
 
-  if (HMILevel::HMI_FULL != app->hmi_level(window_id)) {
+  const auto window_hmi_level = app->hmi_level(window_id);
+  if (PredefinedWindows::DEFAULT_WINDOW != window_id) {
+    const HMILevel::eType new_hmi_level = HMILevel::HMI_FULL == window_hmi_level
+                                              ? HMILevel::HMI_BACKGROUND
+                                              : HMILevel::HMI_NONE;
+    SetRegularState(app, window_id, new_hmi_level, false);
+    return;
+  }
+
+  if (HMILevel::HMI_FULL != window_hmi_level) {
     return;
   }
 

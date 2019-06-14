@@ -116,6 +116,10 @@ void CreateWindowRequest::ApplyWindowInitialState(
       app, window_id, window_type, mobile_apis::HMILevel::HMI_NONE);
 }
 
+app_mngr::WindowID CreateWindowRequest::window_id() const {
+  return mobile_apis::PredefinedWindows::DEFAULT_WINDOW;
+}
+
 void CreateWindowRequest::Run() {
   LOG4CXX_AUTO_TRACE(logger_);
 

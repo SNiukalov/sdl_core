@@ -128,6 +128,12 @@ void OnSystemCapabilityUpdatedNotification::Run() {
       break;
     }
     case mobile_apis::SystemCapabilityType::DISPLAY: {
+      if (msg_params[strings::system_capability].keyExists(
+              strings::display_capabilities)) {
+        // If message already contains 'DisplayCapabilities'
+        // just resend them
+        break;
+      }
       if (!hmi_capabilities_.system_display_capabilities()) {
         LOG4CXX_INFO(logger_, "system_display_capabilities are not available");
         return;

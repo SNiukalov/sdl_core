@@ -34,6 +34,7 @@
 #define SRC_COMPONENTS_APPLICATION_MANAGER_RPC_PLUGINS_SDL_RPC_PLUGIN_INCLUDE_SDL_RPC_PLUGIN_COMMANDS_MOBILE_DELETE_WINDOW_REQUEST_H_
 
 #include "application_manager/commands/command_request_impl.h"
+#include "application_manager/hmi_state.h"
 #include "utils/macro.h"
 
 namespace sdl_rpc_plugin {
@@ -57,6 +58,8 @@ class DeleteWindowRequest : public app_mngr::commands::CommandRequestImpl {
   void Run() FINAL;
 
   void on_event(const app_mngr::event_engine::Event& event) FINAL;
+
+  app_mngr::WindowID window_id() const FINAL;
 
  private:
   /**

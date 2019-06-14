@@ -3068,7 +3068,9 @@ mobile_apis::Result::eType ApplicationManagerImpl::CheckPolicyPermissions(
     params_permissions->undefined_params = result.list_of_undefined_params;
   }
 
-  if (app->hmi_level(window_id) == mobile_apis::HMILevel::HMI_NONE &&
+  // Record statistics for default window only
+  if (app->hmi_level(mobile_apis::PredefinedWindows::DEFAULT_WINDOW) ==
+          mobile_apis::HMILevel::HMI_NONE &&
       function_id != MessageHelper::StringifiedFunctionID(
                          mobile_apis::FunctionID::UnregisterAppInterfaceID)) {
     if (result.hmi_level_permitted != policy::kRpcAllowed) {

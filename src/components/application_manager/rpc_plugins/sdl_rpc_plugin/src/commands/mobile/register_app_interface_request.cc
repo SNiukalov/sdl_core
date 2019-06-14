@@ -852,7 +852,6 @@ void RegisterAppInterfaceRequest::SendRegisterAppInterfaceResponseToMobile(
   SendOnAppRegisteredNotificationToHMI(
       application, resumption, need_restore_vr);
   (*notify_upd_manager)();
-  SendOnDisplayCapsUpdatedNotification();
 
   // Start PTU after successfull registration
   // Sends OnPermissionChange notification to mobile right after RAI response
@@ -1315,12 +1314,6 @@ void RegisterAppInterfaceRequest::SendSubscribeCustomButtonNotification() {
   msg_params[strings::is_suscribed] = true;
   CreateHMINotification(hmi_apis::FunctionID::Buttons_OnButtonSubscription,
                         msg_params);
-}
-
-void RegisterAppInterfaceRequest::SendOnDisplayCapsUpdatedNotification() const {
-  smart_objects::SmartObject display_caps =
-      MessageHelper::CreateDisplayCapabilities(hmi_capabilities_);
-  MessageHelper::BroadcastCapabilityUpdate(display_caps, application_manager_);
 }
 
 bool RegisterAppInterfaceRequest::IsApplicationSwitched() {

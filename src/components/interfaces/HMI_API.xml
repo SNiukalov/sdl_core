@@ -79,7 +79,7 @@
   </element>
 </enum>
 
-<enum name="PredefinedWindows" since="5.1">
+<enum name="PredefinedWindows">
   <element name="DEFAULT_WINDOW" value="0">
     <description>The default window is a main window pre-created on behalf of the app.</description>
   </element>
@@ -2598,7 +2598,7 @@
   </param>
 </struct>
 
-<struct name="TemplateConfiguration" since="5.1">
+<struct name="TemplateConfiguration">
   <param name="template" type="String" maxlength="500" mandatory="true">
     <description>
       Predefined or dynamically created window template.
@@ -2860,7 +2860,7 @@
   <param name="imageSupported" type="Boolean" mandatory="true">
     <description>Must be true if the button supports referencing a static or dynamic image.</description>
   </param>
-  <param name="textSupported" type="Boolean" mandatory="false"  since="5.1">
+  <param name="textSupported" type="Boolean" mandatory="false" >
     <description>
       The button supports the use of text.
       If not included, the default value should be considered true that the button will support text.
@@ -3342,12 +3342,12 @@
   </struct>
 
 
-  <struct name="WindowTypeCapabilities" since="5.1">
+  <struct name="WindowTypeCapabilities">
     <param name="type" type="Common.WindowType" mandatory="true" />
     <param name="maximumNumberOfWindows" type="Integer" mandatory="true" />
   </struct>
 
-  <struct name="WindowCapability" since="5.1">
+  <struct name="WindowCapability">
     <param name="windowID" type="Integer" mandatory="false">
       <description>
         The specified ID of the window. Can be set to a predefined window,
@@ -3377,11 +3377,8 @@
     </param>
   </struct>
 
-  <struct name="DisplayCapability" since="5.1">
+  <struct name="DisplayCapability">
     <description>Contains information about the display capabilities.</description>
-    <param name="displayType" type="Common.DisplayType" mandatory="true">
-      <description>The type of the display. See DisplayType</description>
-    </param>
     <param name="displayName" type="String" mandatory="false" />
     <param name="windowTypeSupported" type="WindowTypeCapabilities" array="true" minsize="1" mandatory="false">
       <description>
@@ -3409,8 +3406,6 @@
       <param name="phoneCapability" type="PhoneCapability" mandatory="false">
       </param>
       <param name="videoStreamingCapability" type="VideoStreamingCapability" mandatory="false">
-      </param>
-      <param name="displayCapabilities" type="DisplayCapability" array="true" minsize="1" maxsize="1000" mandatory="false">
       </param>
   </struct>
 
@@ -3894,7 +3889,7 @@
         <element name="VIDEO_STREAMING"/>
         <element name="REMOTE_CONTROL"/>
         <element name="APP_SERVICES" />
-        <element name="DISPLAY" since="5.1"/>
+        <element name="DISPLAY"/>
     </enum>
 
     <struct name="SystemCapability">
@@ -4099,7 +4094,7 @@
       <param name="appID" type="Integer" mandatory="true">
         <description>ID of selected application.</description>
       </param>
-      <param name="windowID" type="Integer" mandatory="false"> <!-- new -->
+      <param name="windowID" type="Integer" mandatory="false">
         <description>
           This is the unique ID assigned to the window that this RPC is intended. If this param is not included, it will be assumed that this request is specifically for the main window on the main display. See PredefinedWindows enum.
         </description>
@@ -4110,7 +4105,7 @@
       <param name="appID" type="Integer" mandatory="true">
         <description>ID of deactivated application.</description>
       </param>
-      <param name="windowID" type="Integer" mandatory="false"> <!-- new -->
+      <param name="windowID" type="Integer" mandatory="false">
         <description>
           This is the unique ID assigned to the window that this RPC is intended. If this param is not included, it will be assumed that this request is specifically for the main window on the main display. See PredefinedWindows enum.
         </description>
@@ -4390,9 +4385,16 @@
      </param>
    </function>
   <function name="OnSystemCapabilityUpdated" messagetype="notification">
-    <description>A notification to inform the HMI that a specific system capability has changed.</description>
+    <description>
+      A notification between HMI and SDL that a specific system capability has been changed.
+      It can be sent in both directions SDL to HMI and HMI to SDL. Direction is dependent on
+      the point where capabilities have been changed
+    </description>
     <param name="systemCapability" type="Common.SystemCapability" mandatory="true">
       <description>The system capability that has been updated</description>
+    </param>
+    <param name="appID" type="Integer" mandatory="false">
+      <description>ID of application that is related to this RPC.</description>
     </param>
   </function> 
 </interface>
@@ -4701,7 +4703,7 @@
     </param>
   </function>
 
-  <function name="SetDisplayLayout" functionID="SetDisplayLayoutID" messagetype="request" deprecated="true" since="5.1">
+  <function name="SetDisplayLayout" functionID="SetDisplayLayoutID" messagetype="request" deprecated="true">
     <description>This RPC is deprecated. Use Show RPC to change layout.</description>
     <param name="displayLayout" type="String" maxlength="500" mandatory="true">
       <description>
@@ -4716,7 +4718,7 @@
     <param name="nightColorScheme" type="Common.TemplateColorScheme" mandatory="false"></param>
   </function>
 
-  <function name="SetDisplayLayout" messagetype="response" deprecated="true" since="5.1">
+  <function name="SetDisplayLayout" messagetype="response" deprecated="true">
     <description>This RPC is deprecated. Use Show RPC to change layout.</description>
     <param name="displayCapabilities" type="Common.DisplayCapabilities" mandatory="false">
       <description>See DisplayCapabilities</description>
@@ -4768,7 +4770,7 @@
     <param name="appID" type="Integer" mandatory="true">
       <description>Id of application related to this RPC.</description>
     </param>
-    <param name="windowID" type="Integer" mandatory="false" since="5.1" >
+    <param name="windowID" type="Integer" mandatory="false" >
       <description>
         This is the unique ID assigned to the window that this RPC is intended.
         If this param is not included,
@@ -4778,7 +4780,7 @@
       </description>
     </param>
 
-    <param name="templateConfiguration" type="Common.TemplateConfiguration" mandatory="false" since="5.1">
+    <param name="templateConfiguration" type="Common.TemplateConfiguration" mandatory="false">
         <description>
           Used to set an alternate template layout to a window.
         </description>
@@ -4788,7 +4790,7 @@
   <function name="Show" messagetype="response">
   </function>
 
-  <function name="CreateWindow" messagetype="request" since="5.1">
+  <function name="CreateWindow" messagetype="request">
     <description>
       Create a new window on the display with the specified window type.
     </description>
@@ -4836,10 +4838,10 @@
     </param>
   </function>
 
-  <function name="CreateWindow" messagetype="response" since="5.1">
+  <function name="CreateWindow" messagetype="response">
   </function>
 
-  <function name="DeleteWindow" messagetype="request" since="5.1">
+  <function name="DeleteWindow" messagetype="request">
     <description>
       Deletes previously created window of the SDL application.
     </description>
@@ -4855,7 +4857,7 @@
     </param>
   </function>
 
-  <function name="DeleteWindow" messagetype="response" since="5.1">
+  <function name="DeleteWindow" messagetype="response">
   </function>
 
   <function name="AddCommand" messagetype="request">
@@ -5030,7 +5032,7 @@
     <param name="appID" type="Integer" mandatory="false">
       <description>ID of application that is related to this RPC.</description>
     </param>
-    <param name="windowID" type="Integer" mandatory="false"> <!-- new -->
+    <param name="windowID" type="Integer" mandatory="false">
       <description>
         This is the unique ID assigned to the window that this RPC is intended. If this param is not included, it will be assumed that this request is specifically for the main window on the main display. See PredefinedWindows enum.
       </description>

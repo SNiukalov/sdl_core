@@ -72,6 +72,10 @@ bool DeleteWindowRequest::CheckWindowId(
   return true;
 }
 
+app_mngr::WindowID DeleteWindowRequest::window_id() const {
+  return mobile_apis::PredefinedWindows::DEFAULT_WINDOW;
+}
+
 void DeleteWindowRequest::DeleteWindow(
     app_mngr::ApplicationSharedPtr app) const {
   const WindowID window_id =

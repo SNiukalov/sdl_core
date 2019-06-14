@@ -332,6 +332,11 @@ void ShowRequest::Run() {
         (*message_)[strings::msg_params][strings::custom_presets];
   }
 
+  if ((*message_)[strings::msg_params].keyExists(strings::window_id)) {
+    msg_params[strings::window_id] =
+        (*message_)[strings::msg_params][strings::window_id].asInt();
+  }
+
   if ((*message_)[strings::msg_params].keyExists(
           strings::template_configuration)) {
     const bool setting_result = SetTemplateConfigurationForApp(*app);
@@ -347,12 +352,6 @@ void ShowRequest::Run() {
   app_mngr::commands::MessageSharedPtr persistentData =
       std::make_shared<smart_objects::SmartObject>(msg_params);
   app->set_show_command(*persistentData);
-}
-
-void ShowRequest::SendOnDisplayCapsUpdatedNotification() const {
-  auto display_caps =
-      MessageHelper::CreateDisplayCapabilities(hmi_capabilities_);
-  MessageHelper::BroadcastCapabilityUpdate(display_caps, application_manager_);
 }
 
 void ShowRequest::on_event(const event_engine::Event& event) {
@@ -388,7 +387,6 @@ void ShowRequest::on_event(const event_engine::Event& event) {
                    converted_result_code,
                    response_info.empty() ? NULL : response_info.c_str(),
                    &(message[strings::msg_params]));
-      SendOnDisplayCapsUpdatedNotification();
       break;
     }
     default: {

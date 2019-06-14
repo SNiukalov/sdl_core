@@ -198,6 +198,7 @@ void RPCHandlerImpl::ProcessMessageFromHMI(
     LOG4CXX_ERROR(logger_, "Received command didn't run successfully");
   }
 }
+
 void RPCHandlerImpl::Handle(const impl::MessageFromMobile message) {
   LOG4CXX_AUTO_TRACE(logger_);
 

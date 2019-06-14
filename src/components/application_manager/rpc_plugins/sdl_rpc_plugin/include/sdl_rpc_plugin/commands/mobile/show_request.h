@@ -83,13 +83,6 @@ class ShowRequest : public app_mngr::commands::CommandRequestImpl {
   bool CheckStringsOfShowRequest();
 
   /**
-   * @brief Sends OnSystemCapabilitiesUpdated notification with
-   * capabilities type 'DISPLAY' after response to mobile app
-   * to notify app about existing display capabilities.
-   */
-  void SendOnDisplayCapsUpdatedNotification() const;
-
-  /**
    * @brief Handle the conversion of metadata information from the incoming
    * mobile json message format to the outgoing hmi json message format
    */

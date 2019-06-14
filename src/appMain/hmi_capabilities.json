@@ -801,14 +801,13 @@
                 }
             },
             "displayCapabilities": [{
-                "displayType" : "CID",
                 "displayName": "MAIN",
                 "windowTypeSupported": [{
                     "type": "MAIN",
                     "maximumNumberOfWindows": 1
                 }],
                 "windowCapabilities": [{
-                    "windowID": 1,
+                    "windowID": 0,
                     "textFields": [{
                         "name": "mainField1",
                         "characterSet": "TYPE2SET",
@@ -825,6 +824,7 @@
                     }],
                     "imageTypeSupported": ["STATIC"],
                     "numCustomPresetsAvailable": 8,
+                    "templatesAvailable"" = ["All window templates available"],
                     "buttonCapabilities": [
                         {
                             "longPressAvailable": true,

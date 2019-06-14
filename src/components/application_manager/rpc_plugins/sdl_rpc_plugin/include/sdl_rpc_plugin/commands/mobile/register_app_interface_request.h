@@ -207,13 +207,6 @@ class RegisterAppInterfaceRequest
   void SendSubscribeCustomButtonNotification();
 
   /**
-   * @brief Sends OnSystemCapabilitiesUpdated notification with
-   * capabilities type 'DISPLAY' after response to mobile app
-   * to notify app about existing display capabilities.
-   */
-  void SendOnDisplayCapsUpdatedNotification() const;
-
-  /**
    * @brief IsApplicationSwitched checks whether application is switched
    * from
    * another transport. If application id is found, but not in reconnection
