@@ -310,14 +310,6 @@ class StateControllerImpl : public event_engine::EventObserver,
   void ApplyRegularState(ApplicationSharedPtr app,
                          const WindowID window_id,
                          HmiStatePtr state);
-  /**
-   * @brief UpdateAppWindowsStreamingState updates all application windows
-   * audio/video streaming state according to a new application state
-   * @param app pointer to affected application
-   * @param state pointer to state with the new streaming states
-   */
-  void UpdateAppWindowsStreamingState(ApplicationSharedPtr app,
-                                      HmiStatePtr state);
 
   /**
    * @brief SetupRegularHmiState set regular HMI State without

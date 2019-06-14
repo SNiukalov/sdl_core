@@ -439,6 +439,7 @@ HmiStatePtr StateControllerImpl::ResolveHmiState(ApplicationSharedPtr app,
       CreateHmiState(app, HmiState::StateID::STATE_ID_REGULAR);
   DCHECK_OR_RETURN(available_state, HmiStatePtr());
   available_state->set_hmi_level(state->hmi_level());
+  available_state->set_window_type(state->window_type());
   available_state->set_audio_streaming_state(state->audio_streaming_state());
   available_state->set_video_streaming_state(state->video_streaming_state());
   available_state->set_system_context(state->system_context());
@@ -664,36 +665,6 @@ void StateControllerImpl::ApplyRegularState(ApplicationSharedPtr app,
   ForEachApplication(HmiLevelConflictResolver(app, window_id, state, this));
 }
 
-void StateControllerImpl::UpdateAppWindowsStreamingState(
-    ApplicationSharedPtr app, HmiStatePtr state) {
-  LOG4CXX_AUTO_TRACE(logger_);
-  const auto window_ids = app->GetWindowIds();
-  for (auto window_id : window_ids) {
-    HmiStatePtr window_hmi_state = app->RegularHmiState(window_id);
-    if (window_hmi_state->audio_streaming_state() !=
-            state->audio_streaming_state() ||
-        window_hmi_state->video_streaming_state() !=
-            state->video_streaming_state()) {
-      LOG4CXX_DEBUG(logger_,
-                    "Updating streaming state for window #" << window_id);
-
-      HmiStatePtr new_window_state =
-          CreateHmiState(app, HmiState::StateID::STATE_ID_REGULAR);
-      DCHECK_OR_RETURN_VOID(new_window_state);
-      new_window_state->set_hmi_level(window_hmi_state->hmi_level());
-      new_window_state->set_audio_streaming_state(
-          state->audio_streaming_state());
-      new_window_state->set_video_streaming_state(
-          state->video_streaming_state());
-      new_window_state->set_system_context(window_hmi_state->system_context());
-      new_window_state->set_window_type(window_hmi_state->window_type());
-      app->SetRegularState(window_id, new_window_state);
-
-      MessageHelper::SendHMIStatusNotification(app, window_id, app_mngr_);
-    }
-  }
-}
-
 void StateControllerImpl::on_event(const event_engine::MobileEvent& event) {}
 
 void StateControllerImpl::on_event(const event_engine::Event& event) {
@@ -821,10 +792,6 @@ void StateControllerImpl::OnStateChanged(ApplicationSharedPtr app,
                   "additional actions required");
     return;
   }
-
-  // If streaming state of main app window has changed, all other widgets
-  // streaming state should be updated as well
-  UpdateAppWindowsStreamingState(app, new_state);
 
   if (new_state->hmi_level() == mobile_apis::HMILevel::HMI_NONE) {
     app->ResetDataInNone();
