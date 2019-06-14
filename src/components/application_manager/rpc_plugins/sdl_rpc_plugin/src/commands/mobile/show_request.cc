@@ -118,8 +118,10 @@ bool ShowRequest::SetTemplateConfigurationForApp(
   };
 
   const auto set_day_color_scheme = [&app, template_config]() -> bool {
-    if (template_config.keyExists(strings::day_color_scheme) &&
-        app.day_color_scheme() &&
+    if (!template_config.keyExists(strings::day_color_scheme)) {
+      return false;
+    }
+    if (app.day_color_scheme() &&
         !(template_config[strings::day_color_scheme] ==
           *(app.day_color_scheme()))) {
       // Color scheme param exists and has been previously set, do not allow
@@ -133,8 +135,10 @@ bool ShowRequest::SetTemplateConfigurationForApp(
   };
 
   const auto set_night_color_scheme = [&app, template_config]() -> bool {
-    if (template_config.keyExists(strings::night_color_scheme) &&
-        app.night_color_scheme() &&
+    if (!template_config.keyExists(strings::night_color_scheme)) {
+      return false;
+    }
+    if (app.night_color_scheme() &&
         !(template_config[strings::night_color_scheme] ==
           *(app.night_color_scheme()))) {
       // Color scheme param exists and has been previously set, do not allow
