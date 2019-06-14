@@ -208,35 +208,48 @@ smart_objects::SmartObject ResumptionData::GetApplicationWidgetsInfo(
   const auto window_names = application->GetWindowNames();
   const auto window_ids = application->GetWindowIds();
   DCHECK_OR_RETURN(window_names.size() == window_ids.size(), windows_info);
-  const auto& window_info_map = application->window_info_map().GetData();
+  const auto& window_optional_params_map = application->window_optional_params_map().GetData();
   int window_counter = -1;
   for (const auto& window_id : window_ids) {
     const HmiStatePtr hmi_state = application->CurrentHmiState(window_id);
     if (mobile_apis::WindowType::WIDGET != hmi_state->window_type()) {
       continue;
     }
-    auto info = smart_objects::SmartObject(smart_objects::SmartType_Map);
+    auto window_name = window_names[std::distance(&window_ids[0], &window_id)];
+    auto info = CreateWindowInfoSO(
+        window_id, hmi_state->window_type(), window_name, window_optional_params_map);
 
-    info[strings::window_id] = window_id;
-    info[strings::window_type] = hmi_state->window_type();
-    info[strings::window_name] =
-        window_names[std::distance(&window_ids[0], &window_id)];
-
-    const auto& it_info = window_info_map.find(window_id);
-    if (window_info_map.end() != it_info) {
-      if (it_info->second->keyExists(strings::associated_service_type)) {
-        info[strings::associated_service_type] =
-            (*it_info->second)[strings::associated_service_type];
-      }
-      if (it_info->second->keyExists(
-              strings::duplicate_updates_from_window_id)) {
-        info[strings::duplicate_updates_from_window_id] =
-            (*it_info->second)[strings::duplicate_updates_from_window_id];
-      }
-    }
     windows_info[++window_counter] = info;
   }
   return windows_info;
+}
+
+smart_objects::SmartObject ResumptionData::CreateWindowInfoSO(
+    const app_mngr::WindowID window_id,
+    const mobile_apis::WindowType::eType window_type,
+    const std::string& window_name,
+    const app_mngr::WindowOptionalParamsMap& window_optional_params_map) const {
+  using namespace app_mngr;
+  LOG4CXX_AUTO_TRACE(logger_);
+  auto window_info = smart_objects::SmartObject(smart_objects::SmartType_Map);
+
+  window_info[strings::window_id] = window_id;
+  window_info[strings::window_type] = window_type;
+  window_info[strings::window_name] = window_name;
+
+  const auto& it_info = window_optional_params_map.find(window_id);
+  if (window_optional_params_map.end() != it_info) {
+    if (it_info->second->keyExists(strings::associated_service_type)) {
+      window_info[strings::associated_service_type] =
+          (*it_info->second)[strings::associated_service_type];
+    }
+    if (it_info->second->keyExists(strings::duplicate_updates_from_window_id)) {
+      window_info[strings::duplicate_updates_from_window_id] =
+          (*it_info->second)[strings::duplicate_updates_from_window_id];
+    }
+  }
+
+  return window_info;
 }
 
 smart_objects::SmartObject ResumptionData::PointerToSmartObj(

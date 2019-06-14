@@ -272,6 +272,23 @@ class ResumptionData {
       const smart_objects::SmartObject* ptr) const;
 
   /**
+   * @brief creates smart object containing window info
+   * @param window_id window id
+   * @param window_type window type
+   * @param window_name window name
+   * @param window_optional_params_map collection containing optional params for
+   * creating
+   * window
+   * @return smart object with window data
+   */
+  smart_objects::SmartObject CreateWindowInfoSO(
+      const application_manager::WindowID window_id,
+      const mobile_apis::WindowType::eType window_type,
+      const std::string& window_name,
+      const application_manager::WindowOptionalParamsMap&
+          window_optional_params_map) const;
+
+  /**
    * @brief Creates smart array from received data
    * @param first - iterator points to beginning of the data
    * @param last - iterator points to ending of the data
