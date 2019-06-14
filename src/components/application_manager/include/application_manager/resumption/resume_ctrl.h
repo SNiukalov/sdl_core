@@ -106,6 +106,7 @@ class ResumeCtrl {
    * @brief RestoreAppWidgets add widgets for the application
    * @param application application which will be resumed
    * @param saved_app application specific section from backup file
+   * @return true if widgets resumed successfully otherwise - false
    */
   virtual bool RestoreAppWidgets(
       application_manager::ApplicationSharedPtr application,

@@ -310,7 +310,7 @@ class MessageHelper {
       const uint32_t app_id,
       ApplicationManager& app_mngr);
 
-  static smart_objects::SmartObjectList CreateUICreateWindowRequestToHMI(
+  static smart_objects::SmartObjectList CreateUICreateWindowRequestsToHMI(
       application_manager::ApplicationSharedPtr application,
       ApplicationManager& app_mngr,
       const smart_objects::SmartObject& windows_info);
