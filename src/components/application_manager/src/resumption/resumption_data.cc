@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2015, Ford Motor Company
  * All rights reserved.
  *
@@ -205,21 +205,19 @@ smart_objects::SmartObject ResumptionData::GetApplicationWidgetsInfo(
   smart_objects::SmartObject windows_info =
       smart_objects::SmartObject(smart_objects::SmartType_Array);
   DCHECK_OR_RETURN(application, windows_info);
-  const auto window_names = application->GetWindowNames();
   const auto window_ids = application->GetWindowIds();
-  DCHECK_OR_RETURN(window_names.size() == window_ids.size(), windows_info);
-  const auto& window_optional_params_map = application->window_optional_params_map().GetData();
-  int window_counter = -1;
-  for (const auto& window_id : window_ids) {
+  const auto& window_optional_params_map =
+      application->window_optional_params_map().GetData();
+  for (size_t i = 0; i < window_ids.size(); ++i) {
+    const auto& window_id = window_ids[i];
     const HmiStatePtr hmi_state = application->CurrentHmiState(window_id);
     if (mobile_apis::WindowType::WIDGET != hmi_state->window_type()) {
       continue;
     }
-    auto window_name = window_names[std::distance(&window_ids[0], &window_id)];
     auto info = CreateWindowInfoSO(
-        window_id, hmi_state->window_type(), window_name, window_optional_params_map);
+        window_id, hmi_state->window_type(), window_optional_params_map);
 
-    windows_info[++window_counter] = info;
+    windows_info[i] = info;
   }
   return windows_info;
 }
@@ -227,25 +225,20 @@ smart_objects::SmartObject ResumptionData::GetApplicationWidgetsInfo(
 smart_objects::SmartObject ResumptionData::CreateWindowInfoSO(
     const app_mngr::WindowID window_id,
     const mobile_apis::WindowType::eType window_type,
-    const std::string& window_name,
-    const app_mngr::WindowOptionalParamsMap& window_optional_params_map) const {
+    const app_mngr::WindowParamsMap& window_optional_params_map) const {
   using namespace app_mngr;
   LOG4CXX_AUTO_TRACE(logger_);
   auto window_info = smart_objects::SmartObject(smart_objects::SmartType_Map);
 
   window_info[strings::window_id] = window_id;
   window_info[strings::window_type] = window_type;
-  window_info[strings::window_name] = window_name;
 
   const auto& it_info = window_optional_params_map.find(window_id);
   if (window_optional_params_map.end() != it_info) {
-    if (it_info->second->keyExists(strings::associated_service_type)) {
-      window_info[strings::associated_service_type] =
-          (*it_info->second)[strings::associated_service_type];
-    }
-    if (it_info->second->keyExists(strings::duplicate_updates_from_window_id)) {
-      window_info[strings::duplicate_updates_from_window_id] =
-          (*it_info->second)[strings::duplicate_updates_from_window_id];
+    const auto keys = it_info->second->enumerate();
+
+    for (const auto& key : keys) {
+      window_info[key] = (*it_info->second)[key];
     }
   }
 

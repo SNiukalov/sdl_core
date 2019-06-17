@@ -324,7 +324,22 @@ const HmiStatePtr ApplicationImpl::RegularHmiState(
 WindowNames ApplicationImpl::GetWindowNames() const {
   LOG4CXX_DEBUG(logger_,
                 "Collecting window names for application " << app_id());
-  return state_.GetWindowNames();
+
+  WindowNames window_names;
+  std::string stringified_window_names;
+
+  sync_primitives::AutoLock auto_lock(window_params_map_lock_ptr_);
+  for (const auto& window_info_item : window_params_map_) {
+    const auto window_name =
+        (*window_info_item.second)[strings::window_name].asString();
+    window_names.push_back(window_name);
+    stringified_window_names +=
+        (stringified_window_names.empty() ? "" : ",") + window_name;
+  }
+
+  LOG4CXX_DEBUG(logger_,
+                "Existing window names: [" + stringified_window_names + "]");
+  return window_names;
 }
 
 WindowIds ApplicationImpl::GetWindowIds() const {
@@ -1184,9 +1199,9 @@ bool ApplicationImpl::AddExtension(AppExtensionPtr extension) {
 
 bool ApplicationImpl::RemoveExtension(AppExtensionUID uid) {
   auto it = std::find_if(
-      extensions_.begin(), extensions_.end(), [uid](AppExtensionPtr extension) {
-        return extension->uid() == uid;
-      });
+      extensions_.begin(),
+      extensions_.end(),
+      [uid](AppExtensionPtr extension) { return extension->uid() == uid; });
 
   return it != extensions_.end();
 }

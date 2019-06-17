@@ -1,4 +1,4 @@
-/*
+﻿/*
  Copyright (c) 2019, Ford Motor Company
  All rights reserved.
 
@@ -119,9 +119,9 @@ void CreateWindowRequest::ApplyWindowInitialState(
         (*message_)[strings::duplicate_updates_from_window_id];
   }
 
-  if (!window_info.empty()) {
-    app->AddWindowInfo(window_id, window_info);
-  }
+  window_info[strings::window_name] = window_name;
+
+  app->AddWindowInfo(window_id, window_info);
 
   app->SetInitialState(window_id, window_name, initial_state);
 

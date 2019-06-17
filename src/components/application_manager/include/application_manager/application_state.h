@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2015, Ford Motor Company
  * All rights reserved.
  *
@@ -201,16 +201,6 @@ class ApplicationState {
    * @brief hmi_states_map_lock_
    */
   mutable sync_primitives::Lock hmi_states_map_lock_;
-
-  /**
-   * @brief Map containing the name of each window
-   */
-  WindowNamesMap window_names_map_;
-
-  /**
-   * @brief window_names_map_lock_
-   */
-  mutable sync_primitives::Lock window_names_map_lock_;
 
   DISALLOW_COPY_AND_ASSIGN(ApplicationState);
 };

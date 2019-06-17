@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2016, Ford Motor Company
  * All rights reserved.
  *
@@ -146,11 +146,10 @@ typedef std::map<uint32_t, smart_objects::SmartObject*> SubMenuMap;
 typedef std::map<uint32_t, smart_objects::SmartObject*> ChoiceSetMap;
 
 /*
- * @brief Typedef for map of window ids to data used as non mandatory parameters
+ * @brief Typedef for map of window ids to data used as parameters
  * to CreateWindow request.
  */
-typedef std::map<uint32_t, smart_objects::SmartObjectSPtr>
-    WindowOptionalParamsMap;
+typedef std::map<WindowID, smart_objects::SmartObjectSPtr> WindowParamsMap;
 
 /*
  * @brief Typedef for perform interaction choice
@@ -301,7 +300,7 @@ class DynamicApplicationData {
    * @param window_id unique id of a window
    * @param window_info SmartObject that represent window info
    */
-  virtual void AddWindowInfo(const uint32_t window_id,
+  virtual void AddWindowInfo(const WindowID window_id,
                              const smart_objects::SmartObject& window_info) = 0;
 
   /*
@@ -347,8 +346,7 @@ class DynamicApplicationData {
   /*
    * @brief Retrieves non-mandatory window info map
    */
-  virtual DataAccessor<WindowOptionalParamsMap> window_optional_params_map()
-      const = 0;
+  virtual DataAccessor<WindowParamsMap> window_optional_params_map() const = 0;
 
   /*
    * @brief Retrieve application commands

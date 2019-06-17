@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2015, Ford Motor Company
  * All rights reserved.
  *
@@ -284,9 +284,8 @@ class ResumptionData {
   smart_objects::SmartObject CreateWindowInfoSO(
       const application_manager::WindowID window_id,
       const mobile_apis::WindowType::eType window_type,
-      const std::string& window_name,
-      const application_manager::WindowOptionalParamsMap&
-          window_optional_params_map) const;
+      const application_manager::WindowParamsMap& window_optional_params_map)
+      const;
 
   /**
    * @brief Creates smart array from received data
