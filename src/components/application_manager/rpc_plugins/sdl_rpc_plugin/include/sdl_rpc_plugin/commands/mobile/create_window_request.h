@@ -63,14 +63,14 @@ class CreateWindowRequest : public app_mngr::commands::CommandRequestImpl {
 
  private:
   /**
-   * @brief CheckWindowId checks if provided window_id exists and allowed to be
-   * created
+   * @brief WindowIdExists checks if provided window_id does exist
+   * if it does not exist - it is allowed to be created
    * @param app pointer to application owns affected window
    * @param window_id window id to check
-   * @return true if window_id is valid, otherwise returns false
+   * @return true if window_id already exists, otherwise returns false
    */
-  bool CheckWindowId(app_mngr::ApplicationSharedPtr app,
-                     const app_mngr::WindowID window_id) const;
+  bool WindowIdExists(app_mngr::ApplicationSharedPtr app,
+                      const app_mngr::WindowID window_id) const;
 
   /**
    * @brief CheckWindowName checks if provided window_name exists and allowed to

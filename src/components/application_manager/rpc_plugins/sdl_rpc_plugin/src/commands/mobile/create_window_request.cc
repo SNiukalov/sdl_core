@@ -59,10 +59,10 @@ CreateWindowRequest::CreateWindowRequest(
 
 CreateWindowRequest::~CreateWindowRequest() {}
 
-bool CreateWindowRequest::CheckWindowId(
+bool CreateWindowRequest::WindowIdExists(
     ApplicationSharedPtr app, const app_mngr::WindowID window_id) const {
   const WindowIds window_ids = app->GetWindowIds();
-  return !helpers::in_range(window_ids, window_id);
+  return helpers::in_range(window_ids, window_id);
 }
 
 bool CreateWindowRequest::CheckWindowName(
@@ -131,13 +131,36 @@ void CreateWindowRequest::Run() {
     return;
   }
 
-  const WindowID window_id =
+  const auto window_id =
       (*message_)[strings::msg_params][strings::window_id].asUInt();
-  if (!CheckWindowId(application, window_id)) {
+  if (WindowIdExists(application, window_id)) {
     LOG4CXX_ERROR(logger_,
-                  "Window with id #" << window_id << " is already exists");
+                  "Window with id #" << window_id << " does already exist");
     SendResponse(false, mobile_apis::Result::INVALID_ID);
     return;
+  }
+
+  const auto window_type =
+      (*message_)[strings::msg_params][strings::window_type].asInt();
+
+  if (mobile_apis::WindowType::eType::MAIN == window_type) {
+    LOG4CXX_ERROR(logger_, "MAIN application window already exists");
+    SendResponse(false, mobile_apis::Result::INVALID_DATA);
+    return;
+  }
+
+  if ((*message_)[strings::msg_params].keyExists(
+          strings::duplicate_updates_from_window_id)) {
+    const auto duplicate_updates_from_window_id =
+        (*message_)[strings::msg_params]
+                   [strings::duplicate_updates_from_window_id].asInt();
+    if (!WindowIdExists(application, duplicate_updates_from_window_id)) {
+      LOG4CXX_ERROR(logger_,
+                    "Window with id #" << duplicate_updates_from_window_id
+                                       << " does not exist");
+      SendResponse(false, mobile_apis::Result::INVALID_DATA);
+      return;
+    }
   }
 
   const std::string window_name =
