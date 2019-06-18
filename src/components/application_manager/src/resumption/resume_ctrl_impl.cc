@@ -1,4 +1,4 @@
-/*
+﻿/*
  Copyright (c) 2016, Ford Motor Company
  All rights reserved.
 
@@ -309,14 +309,13 @@ bool ResumeCtrlImpl::RestoreAppWidgets(
   using namespace mobile_apis;
   LOG4CXX_AUTO_TRACE(logger_);
   DCHECK_OR_RETURN(application, false);
-  if (saved_app.keyExists(strings::windows_info)) {
-    const auto& windows_info = saved_app[strings::windows_info];
-    ProcessHMIRequests(MessageHelper::CreateUICreateWindowRequestsToHMI(
-        application, application_manager_, windows_info));
-  } else {
-    LOG4CXX_ERROR(logger_, "windows_info section does not exists");
+  if (!saved_app.keyExists(strings::windows_info)) {
+    LOG4CXX_ERROR(logger_, "windows_info section does not exist");
     return false;
   }
+  const auto& windows_info = saved_app[strings::windows_info];
+  ProcessHMIRequests(MessageHelper::CreateUICreateWindowRequestsToHMI(
+      application, application_manager_, windows_info));
   return true;
 }
 
