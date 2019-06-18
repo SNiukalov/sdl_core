@@ -660,6 +660,12 @@ void StateControllerImpl::ApplyRegularState(ApplicationSharedPtr app,
                 "Applying to app " << app->app_id() << " window #" << window_id
                                    << " state " << *state);
   SetupRegularHmiState(app, window_id, state);
+
+  if (mobile_apis::PredefinedWindows::DEFAULT_WINDOW != window_id) {
+    LOG4CXX_DEBUG(logger_, "No need to resolve conflicts for a widget");
+    return;
+  }
+
   LOG4CXX_DEBUG(logger_,
                 "Resolving HMI level conflicts for app " << app->app_id());
   ForEachApplication(HmiLevelConflictResolver(app, window_id, state, this));

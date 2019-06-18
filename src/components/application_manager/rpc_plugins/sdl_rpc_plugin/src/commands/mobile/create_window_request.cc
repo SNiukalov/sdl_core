@@ -153,7 +153,8 @@ void CreateWindowRequest::Run() {
           strings::duplicate_updates_from_window_id)) {
     const auto duplicate_updates_from_window_id =
         (*message_)[strings::msg_params]
-                   [strings::duplicate_updates_from_window_id].asInt();
+                   [strings::duplicate_updates_from_window_id]
+                       .asInt();
     if (!WindowIdExists(application, duplicate_updates_from_window_id)) {
       LOG4CXX_ERROR(logger_,
                     "Window with id #" << duplicate_updates_from_window_id

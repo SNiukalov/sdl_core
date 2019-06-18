@@ -225,7 +225,7 @@ class StateController {
   /**
    * @brief ExitMainWindow performs set of action required for a proper
    * application exiting (i.e. main window exit)
-   * @param app pointer to application to be activated
+   * @param app pointer to application to be exited
    */
   virtual void ExitMainWindow(ApplicationSharedPtr app) = 0;
 };
