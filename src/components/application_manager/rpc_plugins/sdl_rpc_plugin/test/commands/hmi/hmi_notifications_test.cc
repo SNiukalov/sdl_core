@@ -160,8 +160,8 @@ ACTION_P(GetArg, arg) {
   *arg = arg0;
 }
 
-ACTION_P(GetArg3, result) {
-  arg3 = *result;
+ACTION_P(GetArg4, result) {
+  arg4 = *result;
 }
 
 ACTION_P2(GetConnectIdPermissionConsent, connect_id, consent) {
@@ -1846,8 +1846,8 @@ TEST_F(HMICommandsNotificationsTest, OnDriverDistractionNotificationValidApp) {
   result.hmi_level_permitted = policy::kRpcAllowed;
   EXPECT_CALL(app_mngr_, GetPolicyHandler())
       .WillOnce(ReturnRef(mock_policy_handler_));
-  EXPECT_CALL(mock_policy_handler_, CheckPermissions(_, _, _, _))
-      .WillOnce(GetArg3(&result));
+  EXPECT_CALL(mock_policy_handler_, CheckPermissions(_, _, _, _, _))
+      .WillOnce(GetArg4(&result));
   EXPECT_CALL(mock_rpc_service_,
               ManageMobileCommand(_, Command::CommandSource::SOURCE_SDL))
       .WillOnce(GetMessage(message));

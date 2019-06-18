@@ -280,6 +280,10 @@ class MockMessageHelper {
 
   MOCK_METHOD1(PrintSmartObject,
                bool(const smart_objects::SmartObject& object));
+
+  MOCK_METHOD1(ExtractWindowIdFromSmartObject,
+               WindowID(const smart_objects::SmartObject& s_map));
+
   MOCK_METHOD3(SendTTSGlobalProperties,
                void(ApplicationSharedPtr app,
                     const bool default_help_prompt,

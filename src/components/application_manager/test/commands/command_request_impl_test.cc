@@ -373,7 +373,7 @@ TEST_F(CommandRequestImplTest, CheckAllowedParameters_NoMsgParamsMap_SUCCESS) {
 
   CommandPtr command = CreateCommand<UCommandRequestImpl>(message);
 
-  EXPECT_CALL(app_mngr_, CheckPolicyPermissions(_, _, _, _))
+  EXPECT_CALL(app_mngr_, CheckPolicyPermissions(_, _, _, _, _))
       .WillOnce(Return(kMobResultSuccess));
 
   EXPECT_TRUE(command->CheckPermissions());
@@ -394,7 +394,7 @@ TEST_F(CommandRequestImplTest,
       .Times(1)
       .WillRepeatedly(Return(kConnectionKey));
 
-  EXPECT_CALL(app_mngr_, CheckPolicyPermissions(_, _, _, _))
+  EXPECT_CALL(app_mngr_, CheckPolicyPermissions(_, _, _, _, _))
       .WillOnce(Return(mobile_apis::Result::INVALID_ENUM));
 
   EXPECT_CALL(mock_message_helper_, CreateBlockedByPoliciesResponse(_, _, _, _))
@@ -405,7 +405,7 @@ TEST_F(CommandRequestImplTest,
 }
 
 ACTION_P(GetArg3, output) {
-  *output = arg2;
+  *output = arg3;
 }
 
 TEST_F(CommandRequestImplTest, CheckAllowedParameters_MsgParamsMap_SUCCESS) {
@@ -419,7 +419,7 @@ TEST_F(CommandRequestImplTest, CheckAllowedParameters_MsgParamsMap_SUCCESS) {
   ON_CALL(app_mngr_, application(_)).WillByDefault(Return(app));
 
   RPCParams params;
-  EXPECT_CALL(app_mngr_, CheckPolicyPermissions(_, _, _, _))
+  EXPECT_CALL(app_mngr_, CheckPolicyPermissions(_, _, _, _, _))
       .WillOnce(DoAll(GetArg3(&params), Return(kMobResultSuccess)));
 
   EXPECT_TRUE(command->CheckPermissions());

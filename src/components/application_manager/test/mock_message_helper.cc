@@ -524,6 +524,12 @@ bool MessageHelper::PrintSmartObject(const smart_objects::SmartObject& object) {
   return MockMessageHelper::message_helper_mock()->PrintSmartObject(object);
 }
 
+WindowID MessageHelper::ExtractWindowIdFromSmartObject(
+    const smart_objects::SmartObject& s_map) {
+  return MockMessageHelper::message_helper_mock()
+      ->ExtractWindowIdFromSmartObject(s_map);
+}
+
 void MessageHelper::SendSetAppIcon(const uint32_t app_id,
                                    const std::string& icon_path,
                                    ApplicationManager& application_manager) {
