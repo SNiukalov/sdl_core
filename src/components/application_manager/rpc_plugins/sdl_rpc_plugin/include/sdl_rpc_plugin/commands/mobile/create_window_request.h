@@ -61,6 +61,11 @@ class CreateWindowRequest : public app_mngr::commands::CommandRequestImpl {
 
   void on_event(const app_mngr::event_engine::Event& event) FINAL;
 
+  /**
+   * @brief Init sets hash update mode for request
+   */
+  bool Init() FINAL;
+
  private:
   /**
    * @brief WindowIdExists checks if provided window_id does exist

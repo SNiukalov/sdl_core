@@ -239,6 +239,11 @@ void CreateWindowRequest::on_event(const event_engine::Event& event) {
                response_info.empty() ? nullptr : response_info.c_str());
 }
 
+bool CreateWindowRequest::Init() {
+  hash_update_mode_ = HashUpdateMode::kDoHashUpdate;
+  return true;
+}
+
 }  // namespace commands
 
 }  // namespace sdl_rpc_plugin

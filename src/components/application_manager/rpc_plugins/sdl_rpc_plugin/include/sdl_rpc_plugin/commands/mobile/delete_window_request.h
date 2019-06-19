@@ -61,6 +61,11 @@ class DeleteWindowRequest : public app_mngr::commands::CommandRequestImpl {
 
   app_mngr::WindowID window_id() const FINAL;
 
+  /**
+   * @brief Init sets hash update mode for request
+   */
+  bool Init() FINAL;
+
  private:
   /**
    * @brief CheckWindowId checks if provided window_id exists and allowed to be
