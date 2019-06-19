@@ -208,8 +208,7 @@ smart_objects::SmartObject ResumptionData::GetApplicationWidgetsInfo(
   const auto window_ids = application->GetWindowIds();
   const auto& window_optional_params_map =
       application->window_optional_params_map().GetData();
-  for (size_t i = 0; i < window_ids.size(); ++i) {
-    const auto& window_id = window_ids[i];
+  for (const auto& window_id : window_ids) {
     const HmiStatePtr hmi_state = application->CurrentHmiState(window_id);
     if (mobile_apis::WindowType::WIDGET != hmi_state->window_type()) {
       continue;
@@ -217,7 +216,7 @@ smart_objects::SmartObject ResumptionData::GetApplicationWidgetsInfo(
     auto info = CreateWindowInfoSO(
         window_id, hmi_state->window_type(), window_optional_params_map);
 
-    windows_info[i] = info;
+    windows_info[windows_info.length()] = info;
   }
   return windows_info;
 }
