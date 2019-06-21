@@ -214,6 +214,20 @@ class StateController {
    * FALSE.
    */
   virtual bool IsStateActive(HmiState::StateID state_id) const = 0;
+
+  /**
+   * @brief ActivateMainWindow performs set of actions required for a proper
+   * application activation (i.e. main window activation)
+   * @param app pointer to application to be activated
+   */
+  virtual void ActivateMainWindow(ApplicationSharedPtr app) = 0;
+
+  /**
+   * @brief ExitMainWindow performs set of action required for a proper
+   * application exiting (i.e. main window exit)
+   * @param app pointer to application to be exited
+   */
+  virtual void ExitMainWindow(ApplicationSharedPtr app) = 0;
 };
 
 }  // namespace application_manager

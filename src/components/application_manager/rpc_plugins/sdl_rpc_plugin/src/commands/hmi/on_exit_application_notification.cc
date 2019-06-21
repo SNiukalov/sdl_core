@@ -119,13 +119,7 @@ void OnExitApplicationNotification::Run() {
     }
   }
 
-  application_manager_.state_controller().SetRegularState(
-      app_impl,
-      mobile_apis::PredefinedWindows::DEFAULT_WINDOW,
-      HMILevel::HMI_NONE,
-      AudioStreamingState::NOT_AUDIBLE,
-      VideoStreamingState::NOT_STREAMABLE,
-      false);
+  application_manager_.state_controller().ExitMainWindow(app_impl);
 }
 
 }  // namespace commands

@@ -439,6 +439,7 @@ HmiStatePtr StateControllerImpl::ResolveHmiState(ApplicationSharedPtr app,
       CreateHmiState(app, HmiState::StateID::STATE_ID_REGULAR);
   DCHECK_OR_RETURN(available_state, HmiStatePtr());
   available_state->set_hmi_level(state->hmi_level());
+  available_state->set_window_type(state->window_type());
   available_state->set_audio_streaming_state(state->audio_streaming_state());
   available_state->set_video_streaming_state(state->video_streaming_state());
   available_state->set_system_context(state->system_context());
@@ -659,6 +660,12 @@ void StateControllerImpl::ApplyRegularState(ApplicationSharedPtr app,
                 "Applying to app " << app->app_id() << " window #" << window_id
                                    << " state " << *state);
   SetupRegularHmiState(app, window_id, state);
+
+  if (mobile_apis::PredefinedWindows::DEFAULT_WINDOW != window_id) {
+    LOG4CXX_DEBUG(logger_, "No need to resolve conflicts for a widget");
+    return;
+  }
+
   LOG4CXX_DEBUG(logger_,
                 "Resolving HMI level conflicts for app " << app->app_id());
   ForEachApplication(HmiLevelConflictResolver(app, window_id, state, this));
@@ -670,6 +677,8 @@ void StateControllerImpl::UpdateAppWindowsStreamingState(
   const auto window_ids = app->GetWindowIds();
   for (auto window_id : window_ids) {
     HmiStatePtr window_hmi_state = app->RegularHmiState(window_id);
+    LOG4CXX_DEBUG(
+        logger_, "State: " << *state << " window state: " << *window_hmi_state);
     if (window_hmi_state->audio_streaming_state() !=
             state->audio_streaming_state() ||
         window_hmi_state->video_streaming_state() !=
@@ -795,6 +804,48 @@ void StateControllerImpl::on_event(const event_engine::Event& event) {
   }
 }
 
+void StateControllerImpl::ActivateMainWindow(ApplicationSharedPtr app) {
+  LOG4CXX_AUTO_TRACE(logger_);
+  using namespace mobile_apis;
+
+  const WindowID window_id = PredefinedWindows::DEFAULT_WINDOW;
+  const HMILevel::eType hmi_level = HMILevel::HMI_FULL;
+  const AudioStreamingState::eType audio_state =
+      app->IsAudioApplication() ? AudioStreamingState::AUDIBLE
+                                : AudioStreamingState::NOT_AUDIBLE;
+  const VideoStreamingState::eType video_state =
+      app->IsVideoApplication() ? VideoStreamingState::STREAMABLE
+                                : VideoStreamingState::NOT_STREAMABLE;
+
+  SetRegularState(app, window_id, hmi_level, audio_state, video_state, false);
+
+  // After main window activation, streaming state should be updated for another
+  // windows of the app
+  HmiStatePtr new_state =
+      app->RegularHmiState(PredefinedWindows::DEFAULT_WINDOW);
+  UpdateAppWindowsStreamingState(app, new_state);
+}
+
+void StateControllerImpl::ExitMainWindow(ApplicationSharedPtr app) {
+  LOG4CXX_AUTO_TRACE(logger_);
+  using namespace mobile_apis;
+
+  const WindowID window_id = PredefinedWindows::DEFAULT_WINDOW;
+  const HMILevel::eType hmi_level = HMILevel::HMI_NONE;
+  const AudioStreamingState::eType audio_state =
+      AudioStreamingState::NOT_AUDIBLE;
+  const VideoStreamingState::eType video_state =
+      VideoStreamingState::NOT_STREAMABLE;
+
+  SetRegularState(app, window_id, hmi_level, audio_state, video_state, false);
+
+  // After main window exiting, streaming state should be updated for another
+  // windows of the app
+  HmiStatePtr new_state =
+      app->RegularHmiState(PredefinedWindows::DEFAULT_WINDOW);
+  UpdateAppWindowsStreamingState(app, new_state);
+}
+
 void StateControllerImpl::OnStateChanged(ApplicationSharedPtr app,
                                          const WindowID window_id,
                                          HmiStatePtr old_state,
@@ -821,10 +872,6 @@ void StateControllerImpl::OnStateChanged(ApplicationSharedPtr app,
                   "additional actions required");
     return;
   }
-
-  // If streaming state of main app window has changed, all other widgets
-  // streaming state should be updated as well
-  UpdateAppWindowsStreamingState(app, new_state);
 
   if (new_state->hmi_level() == mobile_apis::HMILevel::HMI_NONE) {
     app->ResetDataInNone();
@@ -1050,7 +1097,11 @@ void StateControllerImpl::OnAppActivated(
     const HMILevel::eType new_hmi_level = HMILevel::HMI_NONE == window_hmi_level
                                               ? HMILevel::HMI_BACKGROUND
                                               : HMILevel::HMI_FULL;
-    SetRegularState(app, window_id, new_hmi_level, false);
+    const AudioStreamingState::eType audio_state = app->audio_streaming_state();
+    const VideoStreamingState::eType video_state = app->video_streaming_state();
+
+    SetRegularState(
+        app, window_id, new_hmi_level, audio_state, video_state, false);
     return;
   }
 
@@ -1087,7 +1138,11 @@ void StateControllerImpl::OnAppDeactivated(
     const HMILevel::eType new_hmi_level = HMILevel::HMI_FULL == window_hmi_level
                                               ? HMILevel::HMI_BACKGROUND
                                               : HMILevel::HMI_NONE;
-    SetRegularState(app, window_id, new_hmi_level, false);
+    const AudioStreamingState::eType audio_state = app->audio_streaming_state();
+    const VideoStreamingState::eType video_state = app->video_streaming_state();
+
+    SetRegularState(
+        app, window_id, new_hmi_level, audio_state, video_state, false);
     return;
   }
 

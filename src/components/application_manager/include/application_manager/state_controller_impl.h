@@ -123,6 +123,9 @@ class StateControllerImpl : public event_engine::EventObserver,
   void on_event(const event_engine::Event& event) OVERRIDE;
   void on_event(const event_engine::MobileEvent& event) OVERRIDE;
 
+  void ActivateMainWindow(ApplicationSharedPtr app) OVERRIDE;
+  void ExitMainWindow(ApplicationSharedPtr app) OVERRIDE;
+
  private:
   int64_t SendBCActivateApp(ApplicationConstSharedPtr app,
                             hmi_apis::Common_HMILevel::eType level,
@@ -310,11 +313,13 @@ class StateControllerImpl : public event_engine::EventObserver,
   void ApplyRegularState(ApplicationSharedPtr app,
                          const WindowID window_id,
                          HmiStatePtr state);
+
   /**
    * @brief UpdateAppWindowsStreamingState updates all application windows
-   * audio/video streaming state according to a new application state
+   * audio/video streaming state according to a new HMI state of the main window
    * @param app pointer to affected application
-   * @param state pointer to state with the new streaming states
+   * @param state pointer to state with the new streaming state of the main
+   * window
    */
   void UpdateAppWindowsStreamingState(ApplicationSharedPtr app,
                                       HmiStatePtr state);
