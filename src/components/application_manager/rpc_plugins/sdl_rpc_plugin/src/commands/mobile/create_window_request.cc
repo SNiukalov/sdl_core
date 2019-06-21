@@ -110,13 +110,13 @@ void CreateWindowRequest::ApplyWindowInitialState(
       (*message_)[strings::msg_params][strings::window_name].asString();
 
   smart_objects::SmartObject window_info(smart_objects::SmartType_Map);
-  if (message_->keyExists(strings::associated_service_type)) {
+  if ((*message_)[strings::msg_params].keyExists(strings::associated_service_type)) {
     window_info[strings::associated_service_type] =
-        (*message_)[strings::associated_service_type];
+        (*message_)[strings::msg_params][strings::associated_service_type];
   }
-  if (message_->keyExists(strings::duplicate_updates_from_window_id)) {
+  if ((*message_)[strings::msg_params].keyExists(strings::duplicate_updates_from_window_id)) {
     window_info[strings::duplicate_updates_from_window_id] =
-        (*message_)[strings::duplicate_updates_from_window_id];
+        (*message_)[strings::msg_params][strings::duplicate_updates_from_window_id];
   }
 
   window_info[strings::window_name] = window_name;

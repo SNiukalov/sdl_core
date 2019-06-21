@@ -1579,6 +1579,9 @@ smart_objects::SmartObjectList MessageHelper::CreateUICreateWindowRequestsToHMI(
     (*ui_request)[strings::params][strings::function_id] =
         static_cast<int>(hmi_apis::FunctionID::UI_CreateWindow);
 
+    (*ui_request)[strings::correlation_id] = (*ui_request)[strings::params][strings::correlation_id];
+    (*ui_request)[strings::function_id] = (*ui_request)[strings::params][strings::function_id];
+
     smart_objects::SmartObject msg_params(
         smart_objects::SmartObject(smart_objects::SmartType_Map));
 
