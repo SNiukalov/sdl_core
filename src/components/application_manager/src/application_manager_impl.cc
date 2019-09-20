@@ -2347,6 +2347,8 @@ bool ApplicationManagerImpl::Stop() {
   }
   request_ctrl_.DestroyThreadpool();
 
+  rpc_service_.reset();
+
   // for PASA customer policy backup should happen :AllApp(SUSPEND)
   LOG4CXX_DEBUG(logger_, "Unloading policy library.");
   GetPolicyHandler().UnloadPolicyLibrary();
