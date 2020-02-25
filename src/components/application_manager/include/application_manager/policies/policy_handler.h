@@ -424,6 +424,18 @@ class PolicyHandler : public PolicyHandlerInterface,
    */
   uint32_t GetAppIdForSending() const OVERRIDE;
 
+  /**
+   * @brief Add application to PTU queue if no application with
+   * the same app id exists
+   * @param new_app_id app id new application
+   */
+  void PushAppIdToQueue(const uint32_t new_app_id);
+
+  /**
+   * @brief Remove the first application from applications queue
+   */
+  void PopAppIdFromQueue();
+
   custom_str::CustomString GetAppName(
       const std::string& policy_app_id) OVERRIDE;
 
@@ -584,6 +596,14 @@ class PolicyHandler : public PolicyHandlerInterface,
    * @brief Handler on applications search completed
    */
   void OnAppsSearchCompleted(const bool trigger_ptu) OVERRIDE;
+
+  void OnAddedNewApplicationToAppList(const uint32_t new_app_id,
+                                      const std::string& policy_id) OVERRIDE;
+
+  /**
+   * @brief Queue applications for which PTU has not yet been completed
+   */
+  std::set<uint32_t> queue_applications_for_ptu_;
 
   /**
    * @brief OnAppRegisteredOnMobile allows to handle event when application were
@@ -882,6 +902,7 @@ class PolicyHandler : public PolicyHandlerInterface,
   typedef std::list<PolicyHandlerObserver*> HandlersCollection;
   HandlersCollection listeners_;
   mutable sync_primitives::Lock listeners_lock_;
+  mutable sync_primitives::Lock app_id_queue_lock_;
 
   /**
    * @brief Application-to-device links are used for collecting their current
@@ -896,6 +917,8 @@ class PolicyHandler : public PolicyHandlerInterface,
   std::shared_ptr<StatisticManagerImpl> statistic_manager_impl_;
   const PolicySettings& settings_;
   application_manager::ApplicationManager& application_manager_;
+  std::string last_registered_policy_app_id_;
+
   friend class AppPermissionDelegate;
 
   /**

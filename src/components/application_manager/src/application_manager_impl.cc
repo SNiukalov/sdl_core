@@ -196,6 +196,7 @@ ApplicationManagerImpl::ApplicationManagerImpl(
                             this, &ApplicationManagerImpl::ClearTimerPool))
     , is_low_voltage_(false)
     , apps_size_(0)
+    , registered_during_timer_execution_(false)
     , is_stopping_(false) {
   std::srand(std::time(nullptr));
   AddPolicyObserver(this);
@@ -3828,6 +3829,7 @@ bool ApplicationManagerImpl::IsHMICooperating() const {
 void ApplicationManagerImpl::OnApplicationListUpdateTimer() {
   LOG4CXX_DEBUG(logger_, "Application list update timer finished");
 
+  registered_during_timer_execution_ = false;
   apps_to_register_list_lock_ptr_->Acquire();
   const bool trigger_ptu = apps_size_ != applications_.size();
   apps_to_register_list_lock_ptr_->Release();
@@ -4289,6 +4291,13 @@ void ApplicationManagerImpl::AddAppToRegisteredAppList(
       logger_,
       "App with app_id: " << application->app_id()
                           << " has been added to registered applications list");
+  if (application_list_update_timer_.is_running() &&
+      !registered_during_timer_execution_) {
+    GetPolicyHandler().OnAddedNewApplicationToAppList(
+        application->app_id(), application->policy_app_id());
+    registered_during_timer_execution_ = true;
+  }
+
   apps_size_ = static_cast<uint32_t>(applications_.size());
 }
 

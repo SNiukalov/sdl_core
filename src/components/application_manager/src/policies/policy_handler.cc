@@ -301,7 +301,8 @@ PolicyHandler::PolicyHandler(const PolicySettings& settings,
     , last_activated_app_id_(0)
     , statistic_manager_impl_(std::make_shared<StatisticManagerImpl>(this))
     , settings_(settings)
-    , application_manager_(application_manager) {}
+    , application_manager_(application_manager)
+    , last_registered_policy_app_id_("") {}
 
 PolicyHandler::~PolicyHandler() {}
 
@@ -463,6 +464,26 @@ uint32_t PolicyHandler::GetAppIdForSending() const {
   }
 
   return ChooseRandomAppForPolicyUpdate(apps_with_none_level);
+}
+
+void PolicyHandler::PushAppIdToQueue(const uint32_t app_id) {
+  LOG4CXX_AUTO_TRACE(logger_);
+  sync_primitives::AutoLock lock(app_id_queue_lock_);
+  const auto result = queue_applications_for_ptu_.insert(app_id);
+  if (result.second) {
+    policy_manager_->OnChangeApplicationCount(
+        queue_applications_for_ptu_.size());
+  }
+}
+
+void PolicyHandler::PopAppIdFromQueue() {
+  LOG4CXX_AUTO_TRACE(logger_);
+  sync_primitives::AutoLock lock(app_id_queue_lock_);
+  if (queue_applications_for_ptu_.size() > 0) {
+    queue_applications_for_ptu_.erase(queue_applications_for_ptu_.begin());
+    policy_manager_->OnChangeApplicationCount(
+        queue_applications_for_ptu_.size());
+  }
 }
 
 #ifdef EXTERNAL_PROPRIETARY_MODE
@@ -1913,6 +1934,8 @@ void PolicyHandler::OnPTUFinished(const bool ptu_result) {
   LOG4CXX_AUTO_TRACE(logger_);
   sync_primitives::AutoLock lock(listeners_lock_);
 
+  PopAppIdFromQueue();
+
   std::for_each(
       listeners_.begin(),
       listeners_.end(),
@@ -2208,6 +2231,16 @@ void PolicyHandler::OnAppsSearchStarted() {
 void PolicyHandler::OnAppsSearchCompleted(const bool trigger_ptu) {
   POLICY_LIB_CHECK();
   policy_manager_->OnAppsSearchCompleted(trigger_ptu);
+}
+
+void PolicyHandler::OnAddedNewApplicationToAppList(
+    const uint32_t new_app_id, const std::string& policy_id) {
+  LOG4CXX_AUTO_TRACE(logger_);
+  if (policy_id == last_registered_policy_app_id_) {
+    return;
+  }
+  last_registered_policy_app_id_ = policy_id;
+  PushAppIdToQueue(new_app_id);
 }
 
 void PolicyHandler::OnAppRegisteredOnMobile(const std::string& device_id,

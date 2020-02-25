@@ -81,6 +81,12 @@ class PolicyManager : public usage_statistics::StatisticsManager,
                       const PolicySettings* settings) = 0;
 
   /**
+   * @brief Change applicatios count ready for PTU
+   * @param new_app_count new applications count for PTU
+   */
+  virtual void OnChangeApplicationCount(const uint32_t new_app_count) = 0;
+
+  /**
    * @brief Updates Policy Table from binary message received from
    * mobile device. Saves to Policy Table diff between Policy Table
    * sent in snapshot and received Policy Table.

@@ -77,6 +77,8 @@ class PolicyManagerImpl : public PolicyManager {
 
   const std::vector<std::string> GetApplicationPolicyIDs() const OVERRIDE;
 
+  bool HasApplicationForPTU();
+
   /*
    * \param policy_group group
    * \return true if the group need encryption
@@ -607,6 +609,8 @@ class PolicyManagerImpl : public PolicyManager {
    * @param trigger_ptu contains true if PTU should be triggered
    */
   void OnAppsSearchCompleted(const bool trigger_ptu) OVERRIDE;
+
+  void OnChangeApplicationCount(const uint32_t new_app_count);
 
   /**
    * @brief Get state of request types for given application
@@ -1306,6 +1310,8 @@ class PolicyManagerImpl : public PolicyManager {
    * @brief Current index trying of retry sequence
    */
   uint32_t retry_sequence_index_;
+
+  uint32_t applications_pending_ptu_count_;
 
   /**
    * @brief Lock for guarding retry sequence
