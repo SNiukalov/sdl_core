@@ -55,7 +55,8 @@ enum UpdateEvent {
   kPendingUpdate,
   kScheduleManualUpdate,
   kOnResetRetrySequence,
-  kNoEvent
+  kNoEvent,
+  kUpdateForNextInQueue
 };
 
 const std::string kUpToDate = "UP_TO_DATE";

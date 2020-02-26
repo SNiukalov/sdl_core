@@ -43,7 +43,8 @@ UpdateStatusManager::UpdateStatusManager()
     , current_status_(std::make_shared<UpToDateStatus>())
     , last_processed_event_(kNoEvent)
     , apps_search_in_progress_(false)
-    , app_registered_from_non_consented_device_(true) {}
+    , app_registered_from_non_consented_device_(true)
+    , last_update_failed_(false) {}
 
 UpdateStatusManager::~UpdateStatusManager() {}
 
@@ -102,6 +103,7 @@ void UpdateStatusManager::OnResetDefaultPT(bool is_update_required) {
 
 void UpdateStatusManager::OnResetRetrySequence() {
   LOG4CXX_AUTO_TRACE(logger_);
+  last_update_failed_ = true;
   ProcessEvent(kOnResetRetrySequence);
 }
 
@@ -121,6 +123,10 @@ void UpdateStatusManager::OnNewApplicationAdded(const DeviceConsent consent) {
     return;
   }
   app_registered_from_non_consented_device_ = false;
+  if (last_update_failed_) {
+    last_update_failed_ = false;
+    ProcessEvent(kUpdateForNextInQueue);
+  }
   ProcessEvent(kOnNewAppRegistered);
 }
 
